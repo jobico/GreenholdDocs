@@ -1,0 +1,62 @@
+@import '@fontsource/manrope/latin-400.css';
+@import '@fontsource/manrope/latin-500.css';
+@import '@fontsource/manrope/latin-700.css';
+@import '@fontsource/manrope/latin-ext-400.css';
+@import '@fontsource/manrope/latin-ext-700.css';
+
+:root {
+  --sl-font: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Dark theme (default tokens): Leaf on a deep green-black ground. */
+  --sl-color-accent-low: #12261d;
+  --sl-color-accent: #3f8f63;
+  --sl-color-accent-high: #8cc49f;
+  --sl-color-white: #f6f3ee;
+  --sl-color-gray-1: #e4e0d8;
+  --sl-color-gray-2: #c3beb4;
+  --sl-color-gray-3: #8f8a80;
+  --sl-color-gray-4: #5a574f;
+  --sl-color-gray-5: #34332e;
+  --sl-color-gray-6: #21211d;
+  --sl-color-black: #151613;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #d3e6da;
+  --sl-color-accent: #1b5e43;
+  --sl-color-accent-high: #144a35;
+  --sl-color-white: #1a1c19;
+  --sl-color-gray-1: #2a2c28;
+  --sl-color-gray-2: #43453f;
+  --sl-color-gray-3: #6b6d65;
+  --sl-color-gray-4: #9a9a90;
+  --sl-color-gray-5: #d8d4cb;
+  --sl-color-gray-6: #ebe7df;
+  --sl-color-gray-7: #f1ede6;
+  --sl-color-black: #f6f3ee;
+}
+
+.mermaid { text-align: center; margin: 1.5rem 0; }
+
+/* Note blocks use the Greenhold green instead of the default blue. */
+:root,
+:root[data-theme='light'] {
+  --sl-color-blue-low: var(--sl-color-accent-low);
+  --sl-color-blue: var(--sl-color-accent);
+  --sl-color-blue-high: var(--sl-color-accent-high);
+}
+
+/* Mermaid diagrams follow the theme. */
+.mermaid .node rect,
+.mermaid .node polygon,
+.mermaid .node path,
+.mermaid .cluster rect {
+  fill: var(--sl-color-accent-low) !important;
+  stroke: var(--sl-color-accent) !important;
+}
+.mermaid .cluster rect { fill: var(--sl-color-gray-6) !important; }
+.mermaid .nodeLabel, .mermaid .edgeLabel, .mermaid .cluster-label span, .mermaid .cluster-label .nodeLabel {
+  color: var(--sl-color-white) !important;
+}
+.mermaid .edgeLabel, .mermaid .edgeLabel p, .mermaid .labelBkg { background-color: var(--sl-color-black) !important; }
+.mermaid .flowchart-link { stroke: var(--sl-color-gray-3) !important; }
+.mermaid marker path { fill: var(--sl-color-gray-3) !important; stroke: var(--sl-color-gray-3) !important; }
