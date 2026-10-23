@@ -34,9 +34,24 @@ export default defineConfig({
         },
         {
           label: 'Concepts',
-          items: ['concepts/how-greenhold-works', 'concepts/security-model', 'concepts/certificates'],
+          items: [
+            'concepts/how-greenhold-works',
+            'concepts/orders-and-releases',
+            'concepts/libraries-and-packages',
+            'concepts/policy-for-agents',
+            'concepts/security-model',
+            'concepts/certificates',
+          ],
         },
-        { label: 'Operate', items: ['operate/remove-greenhold'] },
+        {
+          label: 'Operate',
+          items: [
+            'operate/upgrade-greenhold',
+            'operate/troubleshooting',
+            'operate/logs-and-support-bundles',
+            'operate/remove-greenhold',
+          ],
+        },
         { label: 'Reference', items: ['reference/command-line', 'third-party-notices'] },
       ],
     }),
