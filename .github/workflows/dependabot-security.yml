@@ -1,0 +1,45 @@
+# Approves, merges and redeploys Dependabot's SECURITY updates, once the build passes.
+# Weekly version updates are left for a person to review and merge.
+# A merge made with GITHUB_TOKEN starts no other workflow, so this workflow starts the
+# deployment itself (workflow_dispatch is the exception GitHub allows).
+name: Dependabot security updates
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  merge-security-update:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Approve, wait for the build, merge and redeploy
+        if: steps.meta.outputs.dependency-group == 'security'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh pr review "$PR" --approve --body "Security update: approved automatically. It is merged when the build passes."
+          # Wait for the "build" check of this pull request, not for this job's own check.
+          state=""
+          for i in $(seq 1 90); do
+            state=$(gh pr checks "$PR" --json name,bucket --jq '.[] | select(.name == "build") | .bucket' || true)
+            case "$state" in
+              pass) break ;;
+              fail|cancel) echo "The build did not pass. The update is not merged."; exit 1 ;;
+            esac
+            sleep 20
+          done
+          if [ "$state" != "pass" ]; then echo "The build did not finish in 30 minutes. The update is not merged."; exit 1; fi
+          gh pr merge "$PR" --squash --delete-branch
+          gh workflow run deploy.yml --repo "$REPO" --ref main

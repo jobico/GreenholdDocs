@@ -61,3 +61,17 @@ Pull requests build only. They do not deploy. The workflow needs no secrets.
 2. Set **Custom domain** to `docs.greenhold.eu`. Select **Enforce HTTPS** when the certificate is ready.
 3. At the DNS provider of `greenhold.eu`, add a CNAME record: `docs` points to `jobico.github.io`.
 4. Optional: in **Settings > Branches**, protect `main` and require the workflow to pass.
+## Dependency updates (Dependabot)
+
+`.github/dependabot.yml` checks npm packages and GitHub Actions.
+
+- **Security updates** arrive as soon as GitHub knows about an advisory.
+  The workflow `.github/workflows/dependabot-security.yml` approves the pull request,
+  waits for the build, merges it and starts a new deployment. A failed build stops it: then a person looks.
+- **Other updates** arrive once a week (Monday), grouped into one pull request. A person reviews and merges them.
+
+Settings the owner must turn on once:
+
+1. **Settings > Code security**: turn on **Dependabot alerts** and **Dependabot security updates**.
+2. **Settings > Actions > General > Workflow permissions**: select **Read and write permissions** and
+   **Allow GitHub Actions to create and approve pull requests**.

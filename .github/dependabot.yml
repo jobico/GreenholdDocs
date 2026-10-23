@@ -1,0 +1,36 @@
+# Dependency updates for the docs site.
+# Security updates: one pull request per advisory, as soon as GitHub knows about it.
+#   The "Dependabot security updates" workflow approves, merges and redeploys them when the build passes.
+# Other updates: once a week, grouped into one pull request per ecosystem, merged by hand.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Amsterdam
+    open-pull-requests-limit: 5
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+      weekly:
+        applies-to: version-updates
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Amsterdam
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+      weekly:
+        applies-to: version-updates
+        patterns: ["*"]
