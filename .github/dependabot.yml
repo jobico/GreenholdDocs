@@ -12,6 +12,17 @@ updates:
       time: "06:00"
       timezone: Europe/Amsterdam
     open-pull-requests-limit: 5
+    # Major versions are updated by hand, deliberately.
+    #  - mermaid 12: astro-mermaid 2.1.0 allows mermaid 10 and 11 only. Remove this when astro-mermaid supports 12.
+    #  - astro and @astrojs/starlight: a major release can change the build and the layout; read the notes first.
+    # Minor and patch updates, and security updates of any kind, still arrive.
+    ignore:
+      - dependency-name: mermaid
+        update-types: ["version-update:semver-major"]
+      - dependency-name: astro
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@astrojs/starlight"
+        update-types: ["version-update:semver-major"]
     groups:
       security:
         applies-to: security-updates

@@ -31,14 +31,15 @@ npm run preview    # serves dist/ (search works only here, not in dev)
 | `public/favicon.svg` | Favicon. |
 | `.github/workflows/deploy.yml` | Build and deploy (GitHub Pages). |
 | `public/CNAME` | The custom domain. |
-| `scripts/generate-notices.mjs` | Writes `THIRD-PARTY-NOTICES.md` from the lockfile. |
+| `scripts/generate-notices.mjs` | Licence policy check, and writes the page `third-party-notices` from the lockfile (during the build). |
 
 ## Dependencies
 
-All versions are pinned exactly in `package.json`, and `package-lock.json` is committed.
-After you change a dependency, run `npm run notices`.
-The script refuses strong copyleft licences (GPL, AGPL and similar).
-The pipeline runs `npm run notices:check` and fails when the file is out of date.
+Direct dependencies are pinned exactly in `package.json`, and `package-lock.json` is committed.
+The `overrides` block holds a range for a transitive package that needs a security fix the parent does not allow yet (now: katex).
+`npm run notices:check` enforces the licence policy: it refuses strong copyleft (GPL, AGPL and similar) and unknown licences.
+It does not compare against a committed file. The build writes the page `/third-party-notices/` itself (`prebuild`),
+so a dependency update needs no extra commit.
 
 ## Writing style
 
@@ -50,7 +51,7 @@ Do not put internal references, host names or names of people in a page.
 
 `.github/workflows/deploy.yml` builds and publishes the site with GitHub Pages.
 
-1. **Build.** Node from `.nvmrc`, `npm ci`, notices check, `npm run build`. The `dist` folder becomes the Pages artifact.
+1. **Build.** Node from `.nvmrc`, `npm ci`, licence check, `npm run build`. The `dist` folder becomes the Pages artifact.
 2. **Deploy.** A push to `main` publishes the artifact to GitHub Pages. `public/CNAME` holds the domain `docs.greenhold.eu`.
 
 Pull requests build only. They do not deploy. The workflow needs no secrets.
@@ -75,3 +76,11 @@ Settings the owner must turn on once:
 1. **Settings > Code security**: turn on **Dependabot alerts** and **Dependabot security updates**.
 2. **Settings > Actions > General > Workflow permissions**: select **Read and write permissions** and
    **Allow GitHub Actions to create and approve pull requests**.
+
+## License
+
+- Documentation text (`src/content/docs`): [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), see `LICENSE-docs`.
+- Everything else (site code, configuration, scripts, workflows): MIT, see `LICENSE`.
+- Excluded from both: the Greenhold name, logos and brand icons (`src/assets`, `public/favicon.svg`). All rights reserved.
+
+Copyright (c) 2026 John Billekens Consultancy

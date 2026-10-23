@@ -3,3 +3,4 @@ dist/
 .astro/
 .wrangler/
 *.log
+src/content/docs/third-party-notices.md

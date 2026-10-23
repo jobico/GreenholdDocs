@@ -1,0 +1,17 @@
+---
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default {...Astro.props}><slot /></Default>
+<p class="licence-line">
+  Text <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Code MIT.
+  <a href="/third-party-notices/">Third-party notices</a>.
+</p>
+
+<style>
+  .licence-line {
+    margin-top: 1rem;
+    font-size: var(--sl-text-sm);
+    color: var(--sl-color-gray-3);
+  }
+</style>

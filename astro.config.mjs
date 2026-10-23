@@ -18,6 +18,7 @@ export default defineConfig({
         alt: 'Greenhold Docs',
       },
       favicon: '/favicon.svg',
+      components: { Footer: './src/components/Footer.astro' },
       customCss: ['./src/styles/greenhold.css'],
       lastUpdated: false,
       sidebar: [
@@ -36,7 +37,7 @@ export default defineConfig({
           items: ['concepts/how-greenhold-works', 'concepts/security-model', 'concepts/certificates'],
         },
         { label: 'Operate', items: ['operate/remove-greenhold'] },
-        { label: 'Reference', items: ['reference/command-line'] },
+        { label: 'Reference', items: ['reference/command-line', 'third-party-notices'] },
       ],
     }),
   ],
