@@ -13,7 +13,8 @@ hero:
       variant: minimal
 ---
 
-import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+import ProductCard from '../../components/ProductCard.astro';
 
 ## What Greenhold is
 
@@ -29,16 +30,12 @@ The vendor runs no service for you.
 ## Two products
 
 <CardGrid>
-  <LinkCard
-    title="Greenhold Dispatch"
-    description="Dispatch sends signed work to your computers. An administrator signs each Order. The agent on each computer checks the signature before it runs the work."
-    href="/dispatch/overview/"
-  />
-  <LinkCard
-    title="Greenhold Library"
-    description="Library is a signed package library for Windows software. You publish packages to your own file share or Azure Blob."
-    href="/library/overview/"
-  />
+  <ProductCard title="Greenhold Dispatch" href="/dispatch/overview/" icon="dispatch">
+    Dispatch sends signed work to your computers. An administrator signs each Order. The agent on each computer checks the signature before it runs the work.
+  </ProductCard>
+  <ProductCard title="Greenhold Library" href="/library/overview/" icon="library">
+    Library is a signed package library for Windows software. You publish packages to your own file share or Azure Blob.
+  </ProductCard>
 </CardGrid>
 
 ## Where to go next
