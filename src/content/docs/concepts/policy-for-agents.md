@@ -92,7 +92,7 @@ Never give an enrollment token as a property.
 | `Tags` | list | none | The tags of this computer. An Order for a tag names this computer when it carries the tag. |
 | `RunTimeoutMinutes` | 1 to 1440 | 60 | The time that one Run can take. The agent stops a Run that takes longer. |
 
-See [Orders and Releases](/concepts/orders-and-releases/).
+See [Orders and Releases](/dispatch/orders-and-releases/).
 
 ### Libraries
 
@@ -103,7 +103,7 @@ See [Orders and Releases](/concepts/orders-and-releases/).
 | `LibraryMaxAgeDays` | 1 to 3660 | The agent refuses a publication that is older than this number of days. |
 | `RefuseAutomaticPublications` | 0 or 1 | 1 refuses publications that the automatic publisher signed. The agent then uses the last publication that administrators signed. |
 
-See [Libraries and packages](/concepts/libraries-and-packages/).
+See [Libraries and packages](/library/libraries-and-packages/).
 
 ## Other policy keys
 

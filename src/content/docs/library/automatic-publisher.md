@@ -1,0 +1,91 @@
+---
+title: The automatic publisher
+description: How a library publishes updates without a person, what it may publish, and how to set it up.
+---
+
+A library can publish **automatically**.
+A separate program, `Greenhold.LibraryPublisher.exe`, signs with an **automation key**.
+The installation root certifies that key for one library and nothing else.
+The program runs as another account than the refresh.
+
+An administrator signs the first publication and every change that the publisher may not make.
+The publisher is optional.
+
+## What it publishes
+
+The automatic publisher publishes only a newer version of a package that an administrator approved.
+The new version must have the same signer, product and installer type.
+Its cool-off time must be over.
+The cool-off time counts from the moment the publisher first saw the file.
+The default is 3 days.
+
+The publisher never does these things:
+
+- It never makes the first publication.
+- It never adds or removes a package.
+- It never changes a switch, a script, an exit code or a dependency.
+- It never publishes an unsigned installer.
+- It never publishes a new Library Installer set.
+
+An administrator signs those changes.
+What does not qualify waits.
+The reason is in the log of the run.
+
+An automatic publication is valid for 30 days.
+An administrator must publish at least once in each validity period.
+If not, readers stop to accept automatic publications.
+
+## Who can refuse it
+
+- A reader can refuse automatic publications. Set `RefuseAutomaticPublications` to 1 in its policy.
+- A library can require an administrator for every publication. Set `publishing.requireAdministratorSignature` in the library.
+- Every reader judges an automatic publication against the last publication that administrators signed. A chain of automatic publications cannot drift from what was approved.
+
+## Set it up
+
+Do these steps on the refresh computer, in an elevated prompt.
+
+Use **another account** than the account of the refresh.
+The refresh runs code that it fetches.
+It must never be able to use the automation key.
+Use a group managed service account or a dedicated account.
+Install the program under `%ProgramFiles%`.
+
+1. Make the key. The command writes a request file and prints the key ID:
+
+   ```
+   Greenhold.LibraryPublisher key-create --library <lib> --account <publisher account>
+   ```
+
+2. Read the key ID to the root holder by voice or in person. Never use the server.
+3. The root holder certifies the request on the offline computer:
+
+   ```
+   greenhold-sign automation-certify --root root.key.json --request automation.request.txt --library-id <id> --protection tpm|software --out automation.cert
+   ```
+
+4. On the refresh computer, pin the root and install the certificate:
+
+   ```
+   Greenhold.LibraryPublisher pin-root --library <lib> --root root.public.json
+   Greenhold.LibraryPublisher install-certificate --library <lib> --certificate automation.cert
+   ```
+
+5. Set the options if you want other values than the defaults:
+
+   ```
+   Greenhold.LibraryPublisher configure --library <lib> --cool-off-days 3 --valid-days 30 --renew-within-days 7
+   ```
+
+6. Schedule it after the time of the refresh:
+
+   ```
+   Greenhold.LibraryPublisher schedule --library <lib> --at 03:00
+   ```
+
+`Greenhold.LibraryPublisher show` shows what is set up.
+The key is a machine key that cannot be exported.
+It is in the TPM when the computer has one.
+The certificate lasts at most 6 months.
+
+The publisher publishes nothing when the library requires an administrator, when no verified publication exists, when the certificate ends within a day, or when the key is revoked.

@@ -31,7 +31,7 @@ An agent runs these Action types:
 | Action | Job |
 |---|---|
 | `RunScript` | Run one PowerShell script. |
-| `InstallPackage` | Install a package from a library. See [Libraries and packages](/concepts/libraries-and-packages/). |
+| `InstallPackage` | Install a package from a library. See [Libraries and packages](/library/libraries-and-packages/). |
 | `Seal` | Remove the identity of the agent before you capture an image. It must be the last Action. The Order must name exactly one device. |
 
 An agent refuses a Release with any other Action type.
@@ -80,42 +80,11 @@ You cannot remove them from the signed object.
 Use a pseudonym or a role name.
 Do not use the name of a person.
 
-### The second signer
+### The second signer and tags
 
 Some Orders need two signers.
-The two signers must have different administrator IDs and different keys.
-The policy of the agent decides when an Order needs a second signer.
-
-| Policy value | Effect |
-|---|---|
-| `SecondSignerRule` | The Order needs two signers when the agent is a server, when the Order names a tag, or when the Order names more devices than `SecondSignerAbove`. |
-| `SecondSignerAbove` | The device count for the rule above. The default is 25. The count is for one Order. |
-| `AlwaysSecondSigner` | Every Order needs two signers. |
-| `AllowTagRelaxation` | A signed amendment with two signers can make a tag Order follow the device count. |
-
-:::caution
-The limit of 25 devices catches mistakes.
-It does not stop an administrator who splits one rollout into many small Orders.
-To stop this, turn on `AlwaysSecondSigner`.
-:::
-
-Add a second signature to a signed object with `greenhold-sign sign --add-to`.
-The hash of the object does not change.
-See [Policy for agents](/concepts/policy-for-agents/).
-
-### Tags
-
-A tag is a text that the local policy of a computer gives to it.
-Group Policy or Intune sets the `Tags` value.
-An Order that names a tag names every device that carries the tag.
-An agent cannot count the devices of a tag.
-For this reason, an Order for a tag needs two signers.
-
-:::note
-The gateway does not route Orders for a tag yet.
-The command `order add` refuses an Order that names a tag.
-Name the device IDs in the Order.
-:::
+An Order for a tag always needs two.
+See [Second signer and tags](/dispatch/second-signer-and-tags/).
 
 ## The flow of an Order
 
@@ -185,43 +154,5 @@ It reports a numeric code to the gateway and writes the code in its log.
 
 ## Run output
 
-The agent runs each script with Windows PowerShell 5.1:
-
-```
-powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File <script> -Name:value
-```
-
-It runs the Actions in order.
-It stops at the first Action that does not end with exit code 0.
-The whole Run must end within `RunTimeoutMinutes`.
-The default is 60 minutes.
-
-A script declares its values in `param()`.
-Each value arrives as one string.
-It never arrives as code.
-
-The agent sends the output to the gateway while the script writes it.
-One Run keeps at most 1 Mi characters of output.
-The agent keeps output that the gateway cannot take yet.
-It sends that output when a session opens again.
-
-Read the results on the gateway:
-
-```powershell
-.\Greenhold.Gateway.exe run list --limit 50
-.\Greenhold.Gateway.exe run output <order id> --device <device id>
-```
-
-`run list` shows the state of each Run, the exit code and the refusal code of the agent.
-
-:::caution
-The output of a script can hold secrets.
-The gateway does not write Run output in its log.
-The database keeps the output.
-Do not print secrets in a script.
-:::
-
-The database deletes the output of a finished Run after 90 days.
-It deletes the Run itself after 365 days.
-To change the periods, use `database retention set`.
-See [Command line](/reference/command-line/).
+The agent sends the output of each script to the gateway.
+See [Run output and retention](/dispatch/run-output-and-retention/).

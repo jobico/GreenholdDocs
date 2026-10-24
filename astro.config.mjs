@@ -6,6 +6,10 @@ import mermaid from 'astro-mermaid';
 export default defineConfig({
   site: 'https://docs.greenhold.eu',
   telemetry: false,
+  redirects: {
+    '/concepts/orders-and-releases': '/dispatch/orders-and-releases/',
+    '/concepts/libraries-and-packages': '/library/libraries-and-packages/',
+  },
   integrations: [
     // Mermaid renders in the reader's browser. Nothing runs at build time.
     mermaid({ theme: 'neutral', autoTheme: true }),
@@ -27,17 +31,38 @@ export default defineConfig({
           label: 'Get started',
           items: [
             'get-started/requirements',
+            'get-started/admin-tools',
             'get-started/before-you-install',
             'get-started/install-the-server',
             'get-started/enroll-your-first-device',
           ],
         },
         {
+          label: 'Greenhold Dispatch',
+          items: [
+            'dispatch/overview',
+            'dispatch/orders-and-releases',
+            'dispatch/run-a-powershell-script',
+            'dispatch/second-signer-and-tags',
+            'dispatch/run-output-and-retention',
+          ],
+        },
+        {
+          label: 'Greenhold Library',
+          items: [
+            'library/overview',
+            'library/libraries-and-packages',
+            'library/create-a-library',
+            'library/install-a-package',
+            'library/library-installer',
+            'library/azure-blob',
+            'library/automatic-publisher',
+          ],
+        },
+        {
           label: 'Concepts',
           items: [
             'concepts/how-greenhold-works',
-            'concepts/orders-and-releases',
-            'concepts/libraries-and-packages',
             'concepts/policy-for-agents',
             'concepts/security-model',
             'concepts/certificates',

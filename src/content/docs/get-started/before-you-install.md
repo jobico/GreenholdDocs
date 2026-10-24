@@ -8,10 +8,10 @@ The server then receives only a public file.
 
 ## Install the Admin Tools
 
-The release contains a folder named `Greenhold.SigningTool`.
-It holds the Admin Tools.
-Copy this folder to the administrator computer.
-The tool in it is `greenhold-sign`.
+Install [Admin Tools](/get-started/admin-tools/) on the administrator computer.
+It makes the root and the keys in a window.
+The tool `greenhold-sign` does the same on the command line.
+The steps below use `greenhold-sign`.
 
 ## Choose the installation ID
 
