@@ -10,13 +10,22 @@ Run `greenhold-library --help` for every command.
 ## 1. Create the library
 
 ```
-greenhold-library create --library \\files\library --name "Library"
+greenhold-library create --library \\files\library --name "Library" --installation <installation ID>
 ```
 
 `--library` is a full path or a UNC path.
 A relative path is refused.
 The command prints the ID of the library and its **installation ID**.
 
+A library belongs to one installation.
+The root of that installation signs it.
+Give the installation ID with `--installation`.
+Find it in `root.public.json`, as the value of `installationId`.
+The setup wizard and Admin Tools make this file.
+The ID is a GUID, for example `6757bb89-1258-40a6-b363-6930cd246c3f`.
+
+Without `--installation`, the library gets a new installation ID.
+Then make a root for that ID.
 Nothing can be published until that installation has a root and an administrator key.
 Make them with `greenhold-sign root-create --installation <id>`, `admin-create` and `admin-certify`.
 See [Before you install](/get-started/before-you-install/) or [Admin Tools](/get-started/admin-tools/).
