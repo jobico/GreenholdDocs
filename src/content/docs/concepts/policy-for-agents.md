@@ -53,6 +53,7 @@ The two list values (`Libraries` and `LibraryMinimumSequence`) may need Group Po
 ### The properties of the agent MSI
 
 The agent MSI can write the five values that a new agent needs.
+It can also write the two values that relax the strict defaults.
 Use this for a test computer.
 
 | MSI property | Policy value |
@@ -62,6 +63,8 @@ Use this for a test computer.
 | `POLICYCHANNELAUTHORITY` | `ChannelAuthority` |
 | `POLICYINSTALLATIONROOT` | `InstallationRootPublicKey` |
 | `POLICYINSTALLATIONID` | `InstallationId` |
+| `POLICYACCEPTEDKEYKINDS` | `AcceptedKeyKinds`, as a list with commas |
+| `POLICYALLOWTAGRELAXATION` | `AllowTagRelaxation`: `1` or `0` |
 
 The installer remembers the values that you give.
 It writes them again when you repair or upgrade the agent without properties.
@@ -87,12 +90,50 @@ Never give an enrollment token as a property.
 | `SecondSignerRule` | 0 or 1 | 1 | Two signers for an Order that targets a server, a tag, or more devices than `SecondSignerAbove`. |
 | `SecondSignerAbove` | 1 to 100000 | 25 | The device count above which an Order needs two signers. |
 | `AlwaysSecondSigner` | 0 or 1 | 0 | Two signers for every Order. |
-| `AcceptedKeyKinds` | list | all kinds | The key kinds whose signatures count: `software`, `windows-hello`, `passkey`, `security-key`, `vault`. Leave out `software` to demand hardware. |
-| `AllowTagRelaxation` | 0 or 1 | 1 | Whether a signed amendment can make a tag Order follow the device count. |
+| `AcceptedKeyKinds` | list | `windows-hello`, `passkey`, `security-key`, `vault` | The key kinds whose signatures count: `software`, `windows-hello`, `passkey`, `security-key`, `vault`. The default has no `software`. |
+| `AllowTagRelaxation` | 0 or 1 | 0 | Whether a signed amendment can make a tag Order follow the device count. |
 | `Tags` | list | none | The tags of this computer. An Order for a tag names this computer when it carries the tag. |
 | `RunTimeoutMinutes` | 1 to 1440 | 60 | The time that one Run can take. The agent stops a Run that takes longer. |
 
 See [Orders and Releases](/dispatch/orders-and-releases/).
+
+### Strict defaults
+
+An agent without `AcceptedKeyKinds` and `AllowTagRelaxation` uses the strict defaults:
+
+- Only signatures from hardware-backed keys count: Windows Hello, passkey, security key and vault.
+- A signed amendment cannot relax the tag rule.
+
+The agent refuses an Order that is signed with a software key.
+The administrator key that Admin Tools, `greenhold-sign admin-create` or the setup wizard makes is a software key.
+
+A software key is a file in the profile of the administrator.
+Malware on that computer can use it to sign Orders.
+Use software keys for a lab or a test only.
+Do not use them in production.
+
+To relax the defaults for a lab, do one of these steps:
+
+- Give the properties to the agent MSI:
+
+  ```
+  POLICYACCEPTEDKEYKINDS="software,windows-hello,passkey,security-key,vault"
+  ```
+
+  Add `POLICYALLOWTAGRELAXATION=1` only if you use signed amendments that relax the tag rule.
+- Set the policy **Accepted signing key kinds** with Group Policy or Intune. Type one kind on each line, and include `software`.
+- Set the policy **Allow signed amendments to relax the tag rule** to **Enabled** only if you need it.
+
+At the end, the setup wizard shows the command for the agent installer.
+Above the command is the box **My administrator's key is a software key (a lab)**.
+When you tick it, the command includes `POLICYACCEPTEDKEYKINDS`.
+When the wizard made the key on the server, the box is ticked and you cannot clear it.
+
+An agent that has these values in its policy keeps them after an upgrade.
+An agent without them uses the strict defaults after an upgrade.
+
+To test an Order against the strict defaults before you send it, use `greenhold-sign verify`.
+See [The defaults of verify and verify-publication](/reference/command-line/#the-defaults-of-verify-and-verify-publication).
 
 ### Libraries
 
@@ -111,8 +152,11 @@ Other programs read their own keys:
 
 | Key | Program | Examples of values |
 |---|---|---|
-| `HKLM\SOFTWARE\Policies\Greenhold\LibraryInstaller` | Library Installer | `Library`, `LibraryId`, `Root`, `MinimumSequence`, `MaxAge`, `Work`, `BlobAccess`, `BlobHostSuffix`, `RefuseAutomaticPublications`, `LogDays`, `ResultDays` |
+| `HKLM\SOFTWARE\Policies\Greenhold\LibraryInstaller` | Library Installer | `Library`, `LibraryId`, `Root`, `MinimumSequence`, `MaxAge`, `Work`, `BlobAccess`, `BlobHostSuffix`, `RefuseAutomaticPublications`, `AcceptedKeyKinds`, `LogDays`, `ResultDays` |
 | `HKLM\SOFTWARE\Policies\Greenhold\Library` | Computers that fill a library: `greenhold-library` and the automatic publisher | `OfflineRevocation`, `RefuseAutomaticPublications`, `AllowedInternalAddresses` |
+
+The Library Installer also accepts only hardware-backed keys by default.
+See [Which keys count](/library/library-installer/#which-keys-count).
 
 The policy of the Library Installer wins over its command line, its environment and its file.
 A value that conflicts is refused.

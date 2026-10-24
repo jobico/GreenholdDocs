@@ -47,6 +47,32 @@ If another source says something else, the Library Installer refuses to choose.
 The root file must be on the local disk.
 It must not be on a share, and it must not be inside the library.
 
+## Which keys count
+
+By default, the Library Installer accepts only signatures from hardware-backed keys:
+`windows-hello`, `passkey`, `security-key` and `vault`.
+It refuses a publication that is signed with a software key.
+The agent uses the same default.
+
+A software key is a file in the profile of the administrator.
+Malware on that computer can use it to sign.
+Use software keys for a lab or a test only.
+
+To accept other key kinds, set `accepted-key-kinds`.
+The setting comes from the same sources as the other settings, in the same order:
+
+| Source | Name | Format |
+|---|---|---|
+| Policy | `AcceptedKeyKinds` (Group Policy: **Accepted signing key kinds** under **Greenhold Library Installer**) | One kind on each line. |
+| Command line | `--accepted-key-kinds` | A list with commas, for example `software,windows-hello,passkey,security-key,vault`. |
+| Environment | `GREENHOLD_LIBRARY_INSTALLER_ACCEPTED_KEY_KINDS` | A list with commas. |
+| File | `acceptedKeyKinds` in `Greenhold.LibraryInstaller.json` | A text value: a list with commas. |
+
+The kinds are `software`, `windows-hello`, `passkey`, `security-key` and `vault`.
+Include `software` only on a lab computer.
+To check a publication against these defaults before you publish it, use `greenhold-sign verify-publication`.
+See [The defaults of verify and verify-publication](/reference/command-line/#the-defaults-of-verify-and-verify-publication).
+
 ## Azure Blob
 
 For an Azure Blob library, set `BlobAccess`. See [Azure Blob libraries](/library/azure-blob/).

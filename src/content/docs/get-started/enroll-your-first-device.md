@@ -25,6 +25,21 @@ These are the POLICY values:
 | `POLICYINSTALLATIONROOT` | The policy value of `root.public.json` |
 | `POLICYINSTALLATIONID` | `installationId` from `root.public.json` |
 
+:::caution[A software key needs one more property]
+An agent accepts only hardware-backed keys by default: Windows Hello, passkey, security key and vault.
+It refuses an Order that is signed with a software key.
+The keys of Admin Tools and of the setup wizard are software keys.
+For a lab, add this property to the command:
+
+```
+POLICYACCEPTEDKEYKINDS="software,windows-hello,passkey,security-key,vault"
+```
+
+The wizard adds it when you tick **My administrator's key is a software key (a lab)**.
+Do not use software keys in production.
+See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
+:::
+
 To get the authority certificate as base64, run this on the server:
 
 ```powershell

@@ -88,6 +88,20 @@ Alert first on these events:
 | 5003 | A person signed in without a role. |
 | 5201 | The Manager can write to the database. |
 
+Plan for these warnings:
+
+| Event | Meaning |
+|---|---|
+| 3606, 6004 | No license is installed. The free period ends in 15 days or less. 3606 is for Greenhold Dispatch. 6004 is for a library. |
+| 3607, 6005 | No license is installed. The free period ends in 1 day. |
+| 3608, 6006 | No license is installed. The free period is over. New work stops. |
+| 5501 | The sign-in secret of the Manager expires in 30 days or less. |
+| 5502 | The sign-in secret of the Manager expires in 7 days or less. |
+| 5503 | The sign-in secret of the Manager expired. Nobody can sign in. |
+
+The gateway writes 3606 to 3608 once each time it starts.
+`greenhold-library` writes 6004 to 6006 once for each library, when you run `license` or `refresh`.
+
 Anybody who can use the Event Log can write an entry under the name of a source.
 An entry says that something wrote it.
 It does not prove that the product wrote it.
