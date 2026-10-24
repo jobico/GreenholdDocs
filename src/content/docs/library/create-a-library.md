@@ -7,6 +7,13 @@ Do these steps with `greenhold-library` on the refresh computer.
 Do the signing on your own computer with `greenhold-sign`.
 Run `greenhold-library --help` for every command.
 
+## Before you start
+
+- Get `greenhold-library.exe`. It is in the folder `Greenhold.Library.Cli` of the release. Copy the folder to the refresh computer, for example to `C:\Program Files\Greenhold\Library`. Run the commands from that folder, or give the full path.
+- Get `root.public.json` of your installation. On the Greenhold server, it is `C:\ProgramData\Greenhold\Gateway\root.public.json`.
+- Check that the installation ID in `root.public.json` is a GUID. A library cannot use an installation ID that is not a GUID. Then make a new root with a GUID as installation ID, and use that root for the library and for the agents.
+- For a package from WinGet or a URL, the refresh computer needs internet access.
+
 ## 1. Create the library
 
 ```
@@ -84,6 +91,20 @@ A refresh never publishes.
 
 Without a pinned root, the refresh stores candidates and drafts nothing.
 
+To see the packages and their versions:
+
+```
+greenhold-library show --library <lib>
+```
+
+A package with a new version shows a candidate, for example `7-Zip (7zip.7zip)` with the candidate `26.05`.
+
+:::note
+Some WinGet packages offer more than one installer type.
+Then the refresh fails with a message such as `7zip.7zip offers 2 matching installers`.
+Give `--installer-type` in `add-package`, for example `wix` for an MSI.
+:::
+
 To refresh every day, schedule it:
 
 ```
@@ -102,9 +123,20 @@ greenhold-library draft --library <lib> [--ready]
 ```
 
 The command drafts the next publication from the current one.
+`--ready` adds every candidate whose cool-off time is over.
+For the first publication, use `--ready`.
 It lists every field that differs.
 It prints the `greenhold-sign` command to run.
 With nothing to change, it drafts a renewal.
+
+The draft is in `<library>\publication\draft.json`.
+The content of the draft is in `<library>\publication\content\<sha256>.json`.
+The `<sha256>` is the value of `content.hash` in `draft.json`.
+To read it in PowerShell:
+
+```powershell
+(Get-Content -Raw <library>\publication\draft.json | ConvertFrom-Json).content.hash
+```
 
 ## 6. Sign
 
@@ -114,8 +146,11 @@ Sign on your own computer:
 greenhold-sign sign --kind publication --draft <library>\publication\draft.json --content <library>\publication\content\<sha256>.json --library <library> --root root.public.json --state <your folder> --admin-key admin.key.json --cert admin.cert --out publication.signed
 ```
 
-The tool lists every change before it asks for your passphrase.
+The tool lists every change and asks you to confirm.
+Then it asks for your passphrase.
+`--yes` confirms without a question.
 `--state` is a folder on your own computer.
+Never put it in the library.
 It keeps your memory of the publications that you saw.
 Add `--first` for the first publication.
 `--valid-days` sets the validity: 180 days by default, 366 at most.
@@ -128,6 +163,7 @@ For a library on Azure Blob, use the files for signing from the Manager. See [Az
 greenhold-library publish --library <lib> --file publication.signed
 ```
 
+The command prints the sequence of the publication and the signer, for example `Published publication 1 ... signed by admin-01`.
 The command refuses a signature that the pinned root does not vouch for.
 It refuses a draft that another publication overtook. Draft again.
 

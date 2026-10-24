@@ -76,17 +76,32 @@ The first attempt uses up a token.
 
 ## 4. Check
 
-On the agent computer:
+On the agent computer, in an elevated PowerShell:
 
-```
-Greenhold.Agent.exe status
+```powershell
+& 'C:\Program Files\Greenhold\Agent\Greenhold.Agent.exe' status
 ```
 
-On the server:
+On the server, in an elevated PowerShell:
 
-```
-Greenhold.Gateway.exe agent list
+```powershell
+& 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' agent list
 ```
 
 The device appears in both places.
 The Manager shows it too.
+
+Write down two lines of the `status` output:
+
+| Line | Use |
+|---|---|
+| `Device id` | The ID of the device. It has 32 characters. An Order names the device with this ID. |
+| `Server` | `yes` when the computer runs a server edition of Windows. By default, an Order for a server needs two signers. See [Second signer and tags](/dispatch/second-signer-and-tags/). |
+
+`agent list` shows only the first 8 characters of the device ID.
+`agent list --wide` shows the whole ID.
+
+## Next
+
+- [Run a PowerShell script on a device](/dispatch/run-a-powershell-script/)
+- [First steps](/get-started/first-steps/)

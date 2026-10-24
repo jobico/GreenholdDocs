@@ -201,6 +201,55 @@ Then anyone who takes over the server can sign Orders until the private keys lea
 Prefer to make the root on an administrator computer.
 :::
 
+### The Installation root page
+
+The page has three choices:
+
+| Choice | Use |
+|---|---|
+| **Import a root made on an admin computer** | Recommended. Choose `root.public.json`. The page shows the installation ID and the key ID of the file. Compare them with the root holder. |
+| **Make the root on this server** | For a lab or a small installation. The wizard makes the root and the first administrator key. |
+| **Later** | Agents run nothing until there is a root. |
+
+**How to make a root on an admin computer** shows the `greenhold-sign` commands.
+
+If you choose **Make the root on this server**, give these items:
+
+- The folder with `greenhold-sign.exe`.
+- The ID and the name of the first administrator. Use a pseudonym and a role.
+- A passphrase for the root and a passphrase for the administrator key. Each has at least 10 characters.
+- A folder on removable media, such as a USB drive.
+
+The wizard copies the private keys to the removable media, checks the copies and deletes the keys from the server.
+Keep the media offline.
+You need the administrator key from the media to sign.
+
+If you have a license, import the root that the license is for.
+A license works only for its installation ID.
+Do not make a new root.
+
+The wizard keeps the public file on the server in this place:
+
+```
+C:\ProgramData\Greenhold\Gateway\root.public.json
+```
+
+The `installationId` in this file is your installation ID.
+
+### The License page
+
+| Choice | Result |
+|---|---|
+| **Continue without a license** | 5 devices can enroll. All functions work. |
+| **Install a license or trial file** | Choose the file. A license is for the installation ID of the root. |
+| **Need a license? Write a request file** | The wizard writes the file when you apply. Send it to your supplier. |
+
+To see the license after the wizard, run this on the server:
+
+```powershell
+& 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' license show
+```
+
 After the wizard finishes, open the Manager and sign in once.
 This proves that the identity provider works.
 

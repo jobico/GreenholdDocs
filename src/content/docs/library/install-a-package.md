@@ -1,6 +1,6 @@
 ---
 title: Install a package on a device
-description: Sign an InstallPackage Order, pin or follow the publication, and know what the agent does.
+description: Tell the agent where the library is, sign an InstallPackage Order, pin or follow the publication, and know what the agent does.
 ---
 
 Dispatch installs a package with an `InstallPackage` Action in a signed Release.
@@ -10,14 +10,45 @@ It never names a location.
 ## Before you start
 
 - A library with a signed publication. See [Create a library and add a package](/library/create-a-library/).
-- Agents with a policy that lists the library in `Libraries`. See [Policy for agents](/concepts/policy-for-agents/).
-- Read rights for the computer accounts on the share.
+- An enrolled device. See [Enroll your first device](/get-started/enroll-your-first-device/).
+- The steps to sign and store an Order. See [Run a PowerShell script on a device](/dispatch/run-a-powershell-script/).
 
 The agent reads a folder or a share.
 It reads a share as the computer account.
 It does not read an Azure Blob address yet.
 
-## 1. Write the content of the Action
+## 1. Tell the agent where the library is
+
+The agent installs only from libraries that its policy lists in `Libraries`.
+Each entry has the library ID as its name and the folder or share as its value.
+
+Find the library ID in `library.json` in the library folder, as the value of `libraryId`:
+
+```powershell
+(Get-Content -Raw \\files\library\library.json | ConvertFrom-Json).libraryId
+```
+
+For many computers, set `Libraries` with Group Policy.
+See [Policy for agents](/concepts/policy-for-agents/).
+
+For one test computer, write the value in the registry.
+Run this in an elevated PowerShell on the agent computer:
+
+```powershell
+$libraryId = '<library id>'
+$key = 'HKLM:\SOFTWARE\Policies\Greenhold\Agent\Libraries'
+New-Item -Path $key -Force | Out-Null
+Set-ItemProperty -Path $key -Name $libraryId -Value '\\files\library'
+Restart-Service GreenholdAgent
+```
+
+The agent reads its policy when it starts.
+Restart the agent service after each change.
+
+Give the computer account of each agent computer read access to the share.
+Use a full local path only when the library is on the agent computer.
+
+## 2. Write the content of the Action
 
 ```
 greenhold-sign install-spec --library <library folder> --library-id <id> --root root.public.json --package 7zip.7zip --out install.json
@@ -42,7 +73,7 @@ Use the pinned form for sensitive computers.
 
 Add `--refuse-automatic` to make the Action refuse automatic publications.
 
-## 2. Sign the Release and the Order
+## 3. Sign the Release and the Order
 
 Write a Release draft with an Action of this form:
 
@@ -50,13 +81,36 @@ Write a Release draft with an Action of this form:
 { "id": "a1", "type": "InstallPackage", "hash": "<sha256 that install-spec printed>", "artifacts": [] }
 ```
 
-Sign the Release and the Order as in [Run a PowerShell script on a device](/dispatch/run-a-powershell-script/).
+A Release with only this Action has `"parameters": []`.
+Its Order has `"values": {}`.
 
-## 3. Store the Order
+Sign the Release and the Order as in [Run a PowerShell script on a device](/dispatch/run-a-powershell-script/).
+Use a new `jobId` and a new `orderId`, for example `install-7zip` and `install-7zip-1`.
+If the device is a server, the Order needs two signers.
+
+## 4. Store the Order
+
+Copy the signed files and `install.json` to the gateway computer.
+Run this in an elevated PowerShell there:
 
 ```powershell
-.\Greenhold.Gateway.exe order add --release release.signed --order order.signed --content install.json
+& 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' order add --release release.signed --order order.signed --content install.json
 ```
+
+## 5. Read the result
+
+Wait a few minutes. Then run:
+
+```powershell
+& 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' run list
+& 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' run output install-7zip-1
+```
+
+A Run that worked shows `succeeded`.
+The output shows the pinned version, `SHA-256 verified` and `installed (exit 0)`.
+
+If the Run shows `refused` with code 50, the policy of the agent does not list the library.
+Do [step 1](#1-tell-the-agent-where-the-library-is) again and restart the agent service.
 
 ## What the agent does
 
@@ -79,3 +133,7 @@ The wait starts at 1 minute and doubles up to 30 minutes.
 
 If the policy does not list the library, the agent refuses the Order with code 50.
 See [Orders and Releases](/dispatch/orders-and-releases/#what-the-agent-checks) for the codes.
+
+## Next
+
+- [Remove a package from a device](/library/remove-a-package/)

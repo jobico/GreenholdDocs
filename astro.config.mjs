@@ -30,6 +30,7 @@ export default defineConfig({
         {
           label: 'Get started',
           items: [
+            'get-started/first-steps',
             'get-started/requirements',
             'get-started/admin-tools',
             'get-started/before-you-install',
@@ -54,6 +55,7 @@ export default defineConfig({
             'library/libraries-and-packages',
             'library/create-a-library',
             'library/install-a-package',
+            'library/remove-a-package',
             'library/library-installer',
             'library/azure-blob',
             'library/automatic-publisher',

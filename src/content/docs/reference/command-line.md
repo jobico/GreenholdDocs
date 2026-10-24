@@ -34,7 +34,7 @@ The program is in `C:\Program Files\Greenhold\Gateway`.
 | Command | Job |
 |---|---|
 | `order add --release <file> --order <file> --content <file>` | Store a signed Release, a signed Order and the scripts. Give one `--content` file for each script. The command does not check the signatures. |
-| `run list [--limit <n>]` | List the most recent Runs, with state, exit code and refusal code. |
+| `run list [--limit <n>] [--wide]` | List the most recent Runs, with state, exit code and refusal code. `--wide` prints whole values. |
 | `run output <order id> [--device <device id>]` | Show what a Run wrote. |
 
 ### License
@@ -126,7 +126,8 @@ Get-Content token.txt | & "C:\Program Files\Greenhold\Agent\Greenhold.Agent.exe"
 
 ## greenhold-sign
 
-`greenhold-sign` is in the `Greenhold.SigningTool` folder of the release.
+`greenhold-sign` is in `C:\Program Files\Greenhold\Admin Tools\greenhold-sign` when Admin Tools is installed.
+It is also in the `Greenhold.SigningTool` folder of the release.
 Run it on the own computer of an administrator.
 Never run it on the server.
 
@@ -159,7 +160,7 @@ The tool never takes a passphrase as an argument.
 |---|---|
 | `sign --kind release\|order\|policy --draft <json> --admin-key <file> --cert <file> --out <file>` | Sign a draft. |
 | `sign --add-to <signed file> --admin-key <file> --cert <file> --out <file>` | Add a second signature to a signed object. |
-| `sign --kind publication --draft <file> --content <file> --library <dir> --root <file> --state <dir> --admin-key <file> --cert <file> --out <file> [--valid-days 1-366] [--first]` | Sign a library publication. `--state` is your own memory of the library. Keep it on your computer. |
+| `sign --kind publication --draft <file> --content <file> --library <dir> --root <file> --state <dir> --admin-key <file> --cert <file> --out <file> [--valid-days 1-366] [--first] [--yes]` | Sign a library publication. `--state` is your own memory of the library. Keep it on your computer. |
 | `hash --file <signed Release> [--alg sha384]` | Show the hash that an Order names. |
 | `install-spec --library <dir> --library-id <id> --root <file> --package <id> --out <file> [--version <v> \| --follow-publication]` | Write the content of an `InstallPackage` Action from the verified publication. |
 | `verify --order <file> --release <file> --root <file> --device-id <id>` | Check an Order as an agent does. It prints `ACCEPTED` or `REFUSED` with the code. |
@@ -180,18 +181,20 @@ Run `greenhold-sign --help` for all options.
 ## greenhold-library
 
 `greenhold-library` keeps a library in a folder, on a share or in Azure Blob.
+It is in the `Greenhold.Library.Cli` folder of the release.
 It never signs and holds no key.
 `--library` takes a full path, a UNC path or an `https` address.
 Run `greenhold-library --help` for all commands.
 
 | Command | Job |
 |---|---|
-| `create --library <location> [--name <name>]` | Make a library. It prints the library ID and the installation ID. |
+| `create --library <location> [--name <name>] [--installation <id>]` | Make a library. It prints the library ID and the installation ID. `--installation` is the `installationId` of `root.public.json`, a GUID. |
 | `pin-root --library <location> --root <root.public.json>` | Pin the installation root on this computer. |
-| `add-package --library <location> --package <id> --name <name> [--winget \| --url <address>]` | Add a package. |
+| `add-package --library <location> --package <id> --name <name> [--winget \| --url <address>] [--installer-type <type>]` | Add a package. `--installer-type` picks one installer type when the source offers several. |
 | `add-version --library <location> --package <id> --version <v> --file <file>` | Add a version by hand. It becomes a candidate. |
+| `show --library <location>` | Show the packages, their versions and their candidates. |
 | `refresh --library <location>` | Check the sources, store candidates and write a draft. It never publishes. |
-| `draft --library <location>` | Write the next draft and print the line to sign it. |
+| `draft --library <location> [--ready]` | Write the next draft and print the line to sign it. `--ready` adds the candidates whose cool-off time is over. |
 | `publish --library <location> --file <signed file>` | Publish a signed publication. |
 | `schedule --library <location> --at <time> --account <account>` | Register the daily refresh in Task Scheduler. |
 | `issue-read-access --library <address> <writer options> --out <file> [--valid-days 1-7]` | Write a read access for Library Installers on masters. |
