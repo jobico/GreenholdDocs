@@ -9,7 +9,7 @@ interface Props {
 const { title, href, icon } = Astro.props;
 ---
 
-<a class="product-card not-content" href={href}>
+<a class="product-card not-content" href={href} style={`--product: var(--gh-${icon})`}>
   <span class="icon" aria-hidden="true">
     <img class="light" src={`/brand/${icon}.svg`} alt="" width="40" height="40" />
     <img class="dark" src={`/brand/${icon}-dark.svg`} alt="" width="40" height="40" />
@@ -28,13 +28,13 @@ const { title, href, icon } = Astro.props;
     padding: 1.25rem 1.25rem;
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 0.75rem;
-    background: var(--sl-color-bg);
+    background: var(--gh-surface);
     color: var(--sl-color-text);
     text-decoration: none;
   }
   .product-card:hover,
   .product-card:focus-visible {
-    border-color: var(--sl-color-accent);
+    border-color: var(--product, var(--sl-color-accent));
   }
   .product-card:hover .title,
   .product-card:focus-visible .title {

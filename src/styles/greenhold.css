@@ -6,33 +6,40 @@
 
 :root {
   --sl-font: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  /* Dark theme (default tokens): Leaf on a deep green-black ground. */
-  --sl-color-accent-low: #12261d;
-  --sl-color-accent: #3f8f63;
-  --sl-color-accent-high: #8cc49f;
-  --sl-color-white: #f6f3ee;
-  --sl-color-gray-1: #e4e0d8;
-  --sl-color-gray-2: #c3beb4;
-  --sl-color-gray-3: #8f8a80;
-  --sl-color-gray-4: #5a574f;
-  --sl-color-gray-5: #34332e;
-  --sl-color-gray-6: #21211d;
-  --sl-color-black: #151613;
+  /* Colours follow the product brand tokens (Greenhold repo, brand/tokens/tokens.css).
+     Dark theme (Starlight's default tokens). */
+  --sl-color-accent-low: #183d2a; /* --gh-success-bg */
+  --sl-color-accent: #3f8f63; /* Leaf */
+  --sl-color-accent-high: #8cc49f; /* --gh-primary */
+  --sl-color-white: #f3f7f4;
+  --sl-color-gray-1: #e8efea; /* --gh-text */
+  --sl-color-gray-2: #c4d3ca;
+  --sl-color-gray-3: #9db5a8; /* --gh-text-muted */
+  --sl-color-gray-4: #5e7a6c;
+  --sl-color-gray-5: #2a4237; /* --gh-border */
+  --sl-color-gray-6: #13251d; /* --gh-surface */
+  --sl-color-black: #0c1a14; /* --gh-bg */
+  --gh-surface: #13251d;
+  --gh-library: #b9a9f2;
+  --gh-dispatch: #7cc0de;
 }
 
 :root[data-theme='light'] {
-  --sl-color-accent-low: #d3e6da;
-  --sl-color-accent: #1b5e43;
+  --sl-color-accent-low: #e3f1e8; /* --gh-success-bg */
+  --sl-color-accent: #1b5e43; /* Hold green, --gh-primary */
   --sl-color-accent-high: #144a35;
-  --sl-color-white: #1a1c19;
-  --sl-color-gray-1: #2a2c28;
-  --sl-color-gray-2: #43453f;
-  --sl-color-gray-3: #6b6d65;
-  --sl-color-gray-4: #9a9a90;
-  --sl-color-gray-5: #d8d4cb;
-  --sl-color-gray-6: #ebe7df;
-  --sl-color-gray-7: #f1ede6;
-  --sl-color-black: #f6f3ee;
+  --sl-color-white: #0f2a1f; /* --gh-text */
+  --sl-color-gray-1: #1a3a2d;
+  --sl-color-gray-2: #2c4a3d;
+  --sl-color-gray-3: #4a6b5c; /* --gh-text-muted */
+  --sl-color-gray-4: #8a9e92;
+  --sl-color-gray-5: #d9d5c8; /* --gh-border */
+  --sl-color-gray-6: #e9e6dc;
+  --sl-color-gray-7: #efece4;
+  --sl-color-black: #f5f3ec; /* --gh-bg */
+  --gh-surface: #ffffff;
+  --gh-library: #6a58c2;
+  --gh-dispatch: #2b7899;
 }
 
 .mermaid { text-align: center; margin: 1.5rem 0; }
