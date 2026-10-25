@@ -68,14 +68,16 @@ Use a full local path only when the library is on the agent computer.
 <Tabs syncKey="interface">
 <TabItem label="GUI">
 
-1. In the Manager, open **New job**.
-2. Type a **Name of the job**, for example `Install 7-Zip`.
-3. Under **1. What**, choose **Installs a package from a library**. Choose the **Package**.
-4. Leave **Install the version the library publishes when the job runs** cleared. The job then installs the active version of now, with its installer and its steps, and nothing else. This is the pinned form.
-5. Under **2. Where**, choose the devices.
-6. Under **3. When**, set the **Start (UTC)** and the **End (UTC)**.
-7. Choose **Make the job and check it**.
-8. Sign the job with Greenhold Admin. Greenhold Admin shows the package, the version and the SHA-256 of the installer. See [Run a PowerShell script on a device](/dispatch/run-a-powershell-script/).
+1. In the Manager, open **Jobs** and choose **New job**.
+2. **Name**: type a **Name of the job**, for example `Install 7-Zip`. Choose **Next**.
+3. **What**: choose **Installs a package from a library**. Choose the **Package**.
+4. Choose the **Version**. Choose one version, for example the active one, to install that installer and its steps, and nothing else. This is the pinned form. **Latest** follows the library: a newer publication, also an automatic one, is installed when the job runs.
+5. **Where**: choose the devices.
+6. **When**: set the **Start** and the **End**, in the time zone of your browser.
+7. **Review and sign**: check each row. Choose **Make the job and sign with Greenhold Admin**.
+8. Sign the job with Greenhold Admin. Greenhold Admin shows the package and the version. See [Sign with Greenhold Admin](/manager/sign-with-greenhold-admin/).
+
+The job page shows the library by its name. The library's ID is under **Technical details**.
 
 The Manager sends the job when it carries every signature that it needs.
 
@@ -126,8 +128,8 @@ The Action has one of two forms:
 
 | Form | In the Manager | On the command line | What the agent installs |
 |---|---|---|---|
-| Pinned | The default | Default, or `--version <v>` | The version, the installer and the whole plan that the Action names. The agent refuses a later publication that changes any item of the plan. |
-| Published | Tick **Install the version the library publishes when the job runs** | `--follow-publication` | Whatever the verified publication names when the job runs, also a publication of the automatic publisher. |
+| Pinned | **Version**: one version | Default, or `--version <v>` | The version, the installer and the whole plan that the Action names. The agent refuses a later publication that changes any item of the plan. |
+| Published | **Version**: **Latest** | `--follow-publication` | Whatever the verified publication names when the job runs, also a publication of the automatic publisher. |
 
 :::caution
 The published form lets a later publication change what runs.
@@ -144,6 +146,10 @@ Choose the Run of a device to see its state, its exit code and its output.
 
 A Run that worked shows **Succeeded**.
 The output shows the pinned version, `SHA-256 verified` and `installed (exit 0)`.
+
+A Run that shows **Waiting for the library** waits because the device cannot read the library.
+The Run says "Waiting: the device cannot reach the library at" and the path, what to do, and since when.
+See [Troubleshooting](/operate/troubleshooting/#a-job-waits-for-the-library).
 
 </TabItem>
 <TabItem label="CLI">
@@ -182,6 +188,14 @@ When a package asks for a restart, the Run ends with the code 3010 or 1641.
 
 When the library is not reachable, the Order waits.
 The wait starts at 1 minute and doubles up to 30 minutes.
+Each time, the agent tells the gateway why: the Manager shows **Waiting for the library** with the path.
+
+When an installer fails, the Run's output shows part of its log.
+For an MSI, these are the lines around the action that failed and each error line, for example `Error 1303`.
+For other installers, it is the end of the log.
+The agent keeps the logs of a failed Run for 14 days, in `%ProgramData%\Greenhold\Agent\run-logs`.
+The Run says in which folder.
+The policy values `FailedRunLogDays` and `FailedRunLogCount` change how long and how many. See [Policy for agents](/concepts/policy-for-agents/).
 
 If the policy does not list the library, the agent refuses the Order with code 50.
 See [Orders and Releases](/dispatch/orders-and-releases/#what-the-agent-checks) for the codes.

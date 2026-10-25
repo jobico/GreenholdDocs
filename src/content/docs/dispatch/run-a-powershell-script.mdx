@@ -50,15 +50,23 @@ To read the installation ID in PowerShell:
 <Tabs syncKey="interface">
 <TabItem label="GUI">
 
-1. In the Manager, open **New job**.
-2. Type a **Name of the job**, for example `Restart the print spooler`. The name is not signed.
-3. Under **1. What**, choose **Runs a PowerShell script**. Choose the **Script file**, or paste the script in **Or paste the script**. A script has at most 1 MiB. Do not put secrets in a script: every administrator who can read the job can read it. A script with characters other than plain ASCII must be UTF-8. The Manager adds the BOM. A file in an ANSI code page with such characters is refused. See [The encoding rule](/manager/sign-with-greenhold-admin/#the-encoding-rule).
-4. Under **2. Where**, tick the **Devices**. Or choose **Or every device with this tag**. The tag adds the devices that report it now. A device that gets the tag later does not get this job.
-5. Under **3. When**, set the **Start (UTC)** and the **End (UTC)**. The end is at most 30 days after the start. A device that has not started the job by the end does not run it. The device's own run timeout stops a step that runs too long.
-6. Under **4. Signatures**, tick **Ask a second administrator to sign in any case** if you want two signers. The Manager also asks for a second signer when the agents' rules need one. See [When you need two signers](#when-you-need-two-signers).
-7. Choose **Make the job and check it**.
-8. On the job page, check what the job does. Then choose **Sign with Greenhold Admin**.
-9. Greenhold Admin opens the **Release** first. Read the whole script and sign. Then it opens the **Order** by itself. Check the devices, the start and the end, and sign. See [Sign with Greenhold Admin](/manager/sign-with-greenhold-admin/).
+**New job** is a wizard with five steps: **Name**, **What**, **Where**, **When**, and **Review and sign**.
+Each step has **Next** and **Back**. **Back** keeps what you entered.
+The step list at the top links back to each step that you completed.
+The Manager keeps your answers for 8 hours, for you and this sign-in only.
+
+1. In the Manager, open **Jobs** and choose **New job**.
+2. **Name**: type a **Name of the job**, for example `Restart the print spooler`. The name is not signed. Choose **Next**.
+3. **What**: choose **Runs a PowerShell script**.
+   - Choose the **PowerShell**: **Windows PowerShell 5.1** (on every supported Windows) or **PowerShell 7**. Your choice is signed. A device without PowerShell 7 at `%ProgramFiles%\PowerShell\7\pwsh.exe` does not run a PowerShell 7 job. It does not use Windows PowerShell 5.1 instead.
+   - Write the script in the **Script** editor, or choose a `.ps1` file under **Or a script file**. In the editor, Tab indents. To leave the editor with Tab, press Ctrl+M first.
+   - A script has at most 1 MiB. Do not put secrets in a script: every administrator who can read the job can read it. A script with characters other than plain ASCII must be UTF-8. The Manager adds the BOM. A file in an ANSI code page with such characters is refused. See [The encoding rule](/manager/sign-with-greenhold-admin/#the-encoding-rule).
+4. **Where**: tick the **Devices**. Or choose **Or every device with this tag**. The tag adds the devices that report it now. A device that gets the tag later does not get this job. A job names at most 1000 devices. For a PowerShell 7 job, a device is marked **No PowerShell 7** when its agent reported that PowerShell 7 is not installed, and **Did not report PowerShell 7** when it did not say. You can still choose it.
+5. **When**: set the **Start** and the **End**, in the time zone of your browser. Under each field, the page shows the time in UTC. A start in the past means "as soon as each device receives the job". The end must be at least 30 minutes from now, and at most 30 days after the start. A device that has not started the job by the end does not run it. The device's own run timeout stops a step that runs too long.
+6. **Review and sign**: check each row. Choose **Change** to go back to a step. The page says if the Order needs a second administrator, and why. Tick **Ask a second administrator to sign in any case** if you want two signers. See [When you need two signers](#when-you-need-two-signers).
+7. Read the **Warnings about the devices**, if there are any: devices without PowerShell 7 for a PowerShell 7 job, and devices whose policy accepts only some kinds of key. What a device reports is its own word. You can sign the job anyway.
+8. Choose **Make the job and sign with Greenhold Admin**. The Manager checks every answer again, makes the job and opens its signing request.
+9. Greenhold Admin shows what runs and where on one screen. Read it, choose your key and sign. Greenhold Admin signs the Release and the Order together. See [Sign with Greenhold Admin](/manager/sign-with-greenhold-admin/).
 
 ![The New job page, part 1](../../../assets/screens/manager-new-job.png)
 
@@ -81,6 +89,8 @@ The second signer must be another person, with another administrator ID and anot
 **Step 1: Write the script**
 
 The agent runs the script with Windows PowerShell 5.1.
+For PowerShell 7, give the Action the type `RunScriptPwsh` instead of `RunScript` in the Release (step 2).
+A device without PowerShell 7 at `%ProgramFiles%\PowerShell\7\pwsh.exe` refuses such a job.
 Declare each value in `param()`.
 Each value arrives as one string.
 
@@ -241,9 +251,19 @@ This can take a few minutes.
 <Tabs syncKey="interface">
 <TabItem label="GUI">
 
-1. In the Manager, open **Jobs**. The list shows the state of each job and how many Runs finished.
-2. Choose the job. The page shows what the job does, where and when, the signatures, and a Run for each device.
-3. Choose a Run. The page shows the state, the exit code, what the device says, and the output. A refused Run says why in a sentence.
+1. In the Manager, open **Jobs**. The list shows what needs you first: a job that is not signed, that waits for a second administrator, that is signed and not sent, or that failed. Use **Needs you**, the search and the status filter to find a job.
+2. Choose the job. The top of the page shows its state, the PowerShell it runs with, who signed it, how many devices, and its start and end. Under it: the Runs at a glance (done, failed, running, waiting) and a Run for each device, with what did not succeed first.
+3. Choose a device. The Run opens in a panel beside the list: its result, the exit code, when it started and ended, why it did not succeed, what the device says, and the output. Use **Copy** or **Download** for the output. **Open the Run** shows the Run on a page of its own.
+
+The Jobs list, the job page and its Runs update themselves about every 5 seconds while the page is open.
+The page shows "Updated" with the time.
+
+**Run again.** When a job is sent, choose **Run again** to make a new job with the same script and PowerShell for all its devices.
+Choose **Run again on the failed ones** for the devices whose Run failed, was refused or expired.
+The new job is a draft. You sign it as every job.
+
+**Cancel the job.** Until a job is sent, choose **Cancel the job**, then confirm.
+You cannot take back a job that is sent. It ends at its end time.
 
 ![The Jobs page](../../../assets/screens/manager-jobs.png)
 
@@ -257,11 +277,12 @@ This can take a few minutes.
 | Running | Some devices have started the job. |
 | Done | Every device ran the job, and it succeeded on each. |
 | Failed | The job did not succeed on every device. |
-| Cancelled | An administrator chose **Cancel this job** before it was sent. |
+| Cancelled | An administrator chose **Cancel the job** before it was sent. |
 
 | Run state | Meaning |
 |---|---|
 | Waiting for the device | The device gets the job the next time it connects. |
+| Waiting for the library | The device cannot read the library that the job installs from. The Run says where, and what to do. See [Troubleshooting](/operate/troubleshooting/#a-job-waits-for-the-library). |
 | Running | The device started it. |
 | Succeeded | Every step exited with 0. |
 | Failed | A step failed, took too long or wrote too much. |
@@ -295,7 +316,7 @@ To change the script, sign a new Release with a higher version.
 </TabItem>
 </Tabs>
 
-To run the work again in the Manager, make a new job.
+To run the work again in the Manager, choose **Run again** on the job's page.
 
 ## Next
 

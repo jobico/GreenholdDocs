@@ -105,7 +105,7 @@ Only one agent process can run at a time.
 | Command | Job |
 |---|---|
 | `enroll [--token-file <file>]` | Enroll with a token. Without the option, it asks for the token and does not show what you type. It also reads the token from standard input. It refuses a token as an argument. |
-| `status` | Show the policy, the enrollment, the key, the certificate end and the service. |
+| `status` | Show the policy, the enrollment, the key, the certificate end and the service. Also show if the agent is connected to the gateway (and why not), the last contact with the gateway in local time and in UTC, and the path of the agent log, `%ProgramData%\Greenhold\Agent\agent.log`. |
 | `run` | Run the agent in the console. Press Ctrl+C to stop. |
 | `install` | Install the Windows service. It does not start it. |
 | `uninstall` | Stop and remove the service. The key and the folder stay. |

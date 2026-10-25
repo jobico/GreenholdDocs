@@ -17,7 +17,7 @@ These tasks use a signing request:
 | Publish a library | The library's **Draft** page: **Sign and publish**. |
 | Approve an app and keep it current | The app's page: **Approve ... and keep current**. |
 | Certify the automatic publisher's key | The library's **Automatic publishing** page. Only the root holder does this. |
-| Sign a job (a Release, then an Order) | The job's page. |
+| Sign a job: what runs and where, in one request | The last step of **New job**, or the job's page. |
 | Sign a job as the second administrator | The job's page: **Sign as the second administrator**. |
 
 ## Before you start
@@ -36,9 +36,12 @@ These tasks use a signing request:
 3. Choose **Sign with Greenhold Admin**. Your browser asks to open Greenhold Admin. Allow it.
 4. **The first time** a Manager sends you a link, Greenhold Admin shows the Manager's address. Choose **Trust this Manager and continue** only if it is your installation's Manager, at the address you always use. Greenhold Admin remembers your choice. Otherwise choose **Do not trust it**: Greenhold Admin fetches nothing.
 5. Greenhold Admin shows **What you sign**. Read all of it. See [What you see before you sign](#what-you-see-before-you-sign).
-6. Choose your key. A key in the TPM or on a security key asks for its PIN. A key file asks for its passphrase.
-7. Choose **Sign and send to the Manager**.
-8. Greenhold Admin shows the Manager's answer. In the Manager, choose **Check for the result**.
+6. Choose your key. For a job, Greenhold Admin warns when devices do not accept the chosen key, for example "2 of 5 devices do not accept this key". These devices refuse the job. Choose another key, or sign anyway.
+7. Choose **Sign and send to the Manager**. A key in the TPM or on a security key asks for its PIN. A key file asks for its passphrase.
+8. Greenhold Admin shows the Manager's answer. The request page in the Manager shows the result by itself. It says "Waiting for Greenhold Admin" until you sign.
+
+For a job, the request page in the Manager also names the devices that do not accept the kind of your key.
+Each device decides by its own policy. The Manager only warns.
 
 ![The signing request page in the Manager](../../../assets/screens/manager-signing-request.png)
 
@@ -85,11 +88,14 @@ Then it signs exactly those bytes.
 | Request | What you see |
 |---|---|
 | A library publication | The library, the sequence, what it follows, and every change to every package and version. |
-| A job's Release | The job, its version and the **whole script**, with its SHA-256 checked against the script. For a package: the package, the version and the SHA-256 of the installer. |
-| A job's Order | The Release it names (signed, and checked against your root), every device by ID, the start and the end. |
+| A job | One screen for the Release (what runs) and the Order (where and when). First a plain summary: what runs, on which devices, from when to when, and who signs. Then each script step, whole, in a box of its own, with the PowerShell that runs it (Windows PowerShell 5.1 or PowerShell 7). For a package: the package and its version. Last, **Technical details**: the IDs, the hashes and the times of the request. |
 | A second signature | The same Order, and who signed it already. |
 
-For an Order, a name in brackets after a device ID is what the Manager calls the device.
+You open your key once, and Greenhold Admin signs the Release and the Order.
+A key that Windows was told to ask for before each use asks two times.
+The second administrator signs only the Order.
+
+A name in brackets after a device ID is what the Manager calls the device.
 The name is not part of what you sign.
 
 ### The whole script
@@ -103,7 +109,7 @@ A signature says that you saw what runs.
 
 ### The encoding rule
 
-The agent runs a script with Windows PowerShell 5.1.
+The agent runs a script with Windows PowerShell 5.1, unless the job says PowerShell 7.
 Windows PowerShell 5.1 reads a file without a byte order mark (BOM) in the ANSI code page of the device.
 The same bytes can then mean other text than you see.
 

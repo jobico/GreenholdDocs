@@ -87,6 +87,17 @@ The agent writes its start, its stop, its warnings and its errors to its event l
 The folder is for administrators and SYSTEM only.
 The log shows the refusal code when the agent refuses an Order.
 
+The agent keeps these files in its folder, `%ProgramData%\Greenhold\Agent`:
+
+| File or folder | What it holds | How long |
+|---|---|---|
+| `agent.log` | The agent's log. | Three files of 5 MB. |
+| `run-logs\` | The installer logs (for example MSI logs) and script logs of a Run, one folder for each Run. They can hold the MSI properties that a package's switches set. | A Run that did not fail: until the gateway has its result. A failed Run: 14 days, and at most the 20 newest failed Runs. The policy values `FailedRunLogDays` and `FailedRunLogCount` change this. See [Policy for agents](/concepts/policy-for-agents/). |
+| `connection.json` | If the agent is connected, since when, the last contact with the gateway, and why the last connection ended. `Greenhold.Agent.exe status` shows it. | The agent writes it again while it runs. |
+
+The Run's summary in the Manager names the folder of its logs.
+`remove-identity` and `seal` remove these files.
+
 ## Security events
 
 Every product writes security events under the category `Greenhold.Security`.
@@ -199,7 +210,7 @@ The bundle never holds these items:
 The bundle leaves out these items unless you add them with an option:
 
 - The output of scripts. Use `--include-run-output` for the gateway.
-- Installer logs. Use `--include-installer-logs`.
+- Installer logs, also the logs that the agent keeps of failed Runs. Use `--include-installer-logs`.
 
 ### How the bundle redacts
 

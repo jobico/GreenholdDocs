@@ -142,6 +142,8 @@ Greenhold.Agent.exe status
 ```
 
 Check that the policy is complete. Check the connection to port 8444.
+After enrollment, `status` shows `Connected: yes`. If it shows `no`, it says why, and when the gateway last answered.
+The `Agent log` line shows where the log is.
 
 **Fix.**
 
@@ -273,9 +275,10 @@ A refused Order stays refused. Send the job again.
 See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
 For production, sign with a hardware-backed key.
 
-## A job waits, and the agent log says the library cannot be reached
+## A job waits for the library
 
-**Symptom.** A job that installs a package stays at "Waiting for the device".
+**Symptom.** A job that installs a package does not run on a device.
+In the Manager, the device's Run shows **Waiting for the library** and "Waiting: the device cannot reach the library at" the library's path.
 `%ProgramData%\Greenhold\Agent\agent.log` shows `LibraryUnreachableException` with the library path.
 
 **Cause.** The agent reads the library from the path in its `Libraries` policy, as SYSTEM.
@@ -290,12 +293,17 @@ Or the device is not in the domain of the server, so it has no account for the s
 | Not in the domain | Copy the library folder to the device. Set the `Libraries` value to that folder. The copy is safe: the agent checks each file against the signed publication. The agent does not read a library from Azure Blob yet. |
 
 Then run `Restart-Service GreenholdAgent`. The agent takes the job again within 30 minutes.
+When the device can read the library, the Run starts and the waiting message goes away.
 A later version of Greenhold delivers the package files through the gateway, so a device does not need access to the library.
 
 ## A package install fails with 1303 or 1603
 
-**Symptom.** A Run fails with exit code 1603. The installer log says `Error 1303. The installer has insufficient privileges to access this directory`, for example `C:\Program Files\7-Zip`.
+**Symptom.** A Run fails with exit code 1603. The Run's output shows the lines of the installer log around the action that failed, and each error line.
+One of them is `Error 1303. The installer has insufficient privileges to access this directory`, for example `C:\Program Files\7-Zip`.
 The folder does not exist, and an administrator can make folders in `C:\Program Files`.
+
+The whole installer log stays on the device for 14 days, in `%ProgramData%\Greenhold\Agent\run-logs`.
+The Run's summary names the folder.
 
 **Cause.** Software on the device blocks the folders of that app. Common examples:
 

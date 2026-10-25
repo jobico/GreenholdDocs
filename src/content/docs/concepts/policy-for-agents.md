@@ -94,6 +94,8 @@ Never give an enrollment token as a property.
 | `AllowTagRelaxation` | 0 or 1 | 0 | Whether a signed amendment can make a tag Order follow the device count. |
 | `Tags` | list | none | The tags of this computer. An Order for a tag names this computer when it carries the tag. |
 | `RunTimeoutMinutes` | 1 to 1440 | 60 | The time that one Run can take. The agent stops a Run that takes longer. |
+| `FailedRunLogDays` | 1 to 365 | 14 | The number of days that the agent keeps the installer and script logs of a failed Run, in `%ProgramData%\Greenhold\Agent\run-logs`. The agent removes the logs of a Run that did not fail when the gateway has its result. |
+| `FailedRunLogCount` | 1 to 1000 | 20 | The largest number of failed Runs whose logs the agent keeps. It keeps the newest. |
 
 See [Orders and Releases](/dispatch/orders-and-releases/).
 

@@ -158,12 +158,15 @@ On the server, in an elevated PowerShell:
 The device appears in both places.
 The Manager shows it too.
 
-Write down two lines of the `status` output:
+Look at these lines of the `status` output:
 
 | Line | Use |
 |---|---|
-| `Device id` | The ID of the device. It has 32 characters. An Order names the device with this ID. |
+| `Device id` | The ID of the device. It has 32 characters. An Order names the device with this ID. Write it down. |
 | `Server` | `yes` when the computer runs a server edition of Windows. By default, an Order for a server needs two signers. See [Second signer and tags](/dispatch/second-signer-and-tags/). |
+| `Connected` | `yes` when the agent service runs and the gateway answered in the last minutes. When it is `no`, the line says why. The agent tries again by itself. |
+| `Last contact` | When the gateway last answered, in the local time of the computer and in UTC. `never` before the first connection. |
+| `Agent log` | The path of the agent log, `%ProgramData%\Greenhold\Agent\agent.log`. Read it when the agent is not connected. |
 
 `agent list` shows only the first 8 characters of the device ID.
 `agent list --wide` shows the whole ID.
