@@ -157,7 +157,7 @@ The status page of the Manager has the card **Sign-in secret**:
 | Not a date (warning) | The setting is not in the format `yyyy-MM-dd`. |
 
 The Manager counts the days in UTC.
-It also writes a security event to the Windows Event Log: 5501 from 30 days before the date, 5502 from 7 days before the date, and 5503 from the date itself.
+It also writes a security event to its event log (Event Viewer: Applications and Services Logs > Greenhold > Manager): 5501 from 30 days before the date, 5502 from 7 days before the date, and 5503 from the date itself.
 It writes each event at most once a day.
 See [Logs and support bundles](/operate/logs-and-support-bundles/).
 

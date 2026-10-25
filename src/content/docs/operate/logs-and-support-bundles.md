@@ -1,6 +1,6 @@
 ---
 title: Logs and support bundles
-description: Where each product writes its log, which Event Log sources exist, and how to make a support bundle.
+description: Where each product writes its log, the Greenhold event logs in Event Viewer, and how to make a support bundle.
 ---
 
 Each product writes its own log.
@@ -8,22 +8,56 @@ Read the logs on the computer where the product runs.
 
 ## Where the products log
 
-| Product | Log | Event Log source |
+| Product | Log | Event log (Event Viewer) |
 |---|---|---|
-| Gateway | `%ProgramData%\Greenhold\Gateway\logs\gateway.log` | `Greenhold Gateway` |
-| Manager | The Windows Application event log | `Greenhold Manager` |
-| Agent | `%ProgramData%\Greenhold\Agent\agent.log` | None |
-| Setup wizard | `%ProgramData%\Greenhold\Setup\setup.log` for a scripted run | - |
-| Library command line | Security events in the Application event log. Run logs in the library, in `logs\runs` | `Greenhold Library` |
-| Automatic publisher | Results in the library, in `logs\automatic`. `journal.jsonl` in its home folder, `%ProgramData%\Greenhold\LibraryPublisher\<LibraryId>` | - |
+| Gateway | `%ProgramData%\Greenhold\Gateway\logs\gateway.log` | Greenhold > Gateway |
+| Manager | The console and the event log | Greenhold > Manager |
+| Agent | `%ProgramData%\Greenhold\Agent\agent.log` | Greenhold > Agent |
+| Setup wizard | `%ProgramData%\Greenhold\Setup\setup.log` for a scripted run | Greenhold > Setup |
+| Library command line | Run logs in the library, in `logs\runs` | Greenhold > Library Refresh |
+| Automatic publisher | Results in the library, in `logs\automatic`. `journal.jsonl` in its home folder, `%ProgramData%\Greenhold\LibraryPublisher\<LibraryId>` | Greenhold > Library Publisher |
+| Greenhold Admin | - | Greenhold > Admin, on your own computer |
 | Library Installer | `logs\` and `results\` in its work folder, `%ProgramData%\Greenhold\LibraryInstaller` | - |
 | MSI installers | The file that you name with `/l*v` | - |
+
+## The Greenhold event logs
+
+Each product writes to its own event log.
+In Event Viewer, open **Applications and Services Logs > Greenhold**.
+Each product has a folder with one log, **Operational**.
+Greenhold writes nothing to the Application log.
+
+The installers register the logs. The uninstall removes them. The events already written stay until you clear the log.
+
+The event IDs are the same in each log:
+
+| ID | Level | Meaning |
+|---|---|---|
+| 1000 | Information | The product started. |
+| 1001 | Information | The product stopped. |
+| 2000 | Warning | A warning. |
+| 3000 | Error | An error. |
+| 3001 | Critical | The product cannot continue. |
+| 4000 | Information | A security event. |
+| 4001 | Warning | A security event at Warning. |
+| 4002 | Error | A security event at Error. |
+
+Each event has three values on the **Details** tab: `Message` (the text), `LogEventId` (the ID of the line in the product's log, for example 5003 for a sign-in without a role) and `Category`.
+To filter on one security event, use the log, the event ID and `LogEventId`. For example, in an XPath filter on `Greenhold-Manager/Operational`:
+
+```
+*[System[EventID=4001] and EventData[Data[@Name='LogEventId']=5003]]
+```
+
+Each log is 1 MB by default. Change the size in the log's Properties, with `wevtutil sl`, or with Group Policy.
+To forward the events, subscribe to the log by its name, for example `Greenhold-Gateway/Operational`.
+The output of a Run never goes to an event log.
 
 Windows writes the service errors 7000 and 7009 in the System log when a service does not start.
 
 ### Gateway
 
-The gateway writes to the console, to the log file and to the Windows Application event log.
+The gateway writes to the console, to the log file and to its event log (Greenhold > Gateway).
 
 - The file has one JSON object on each line. It has the fields `time` (UTC), `level`, `eventId`, `event`, `category`, `security` and `message`.
 - The file rotates at 10 MB. The gateway keeps 10 files. The files of the gateway need at most about 100 MB.
@@ -43,24 +77,13 @@ Keep `Gateway:Logging:RunOutput` off on a production server.
 
 ### Manager
 
-The Manager writes to the Application event log under the source `Greenhold Manager`.
-The event ID is the Windows event ID.
-An administrator must register the source once:
-
-```
-Greenhold.Manager.exe event-source create
-```
-
-Restart the Manager after you register the source.
-Without the source, the Manager writes under `.NET Runtime` with the event ID 1000 for every event.
-It then shows a warning at start.
-
-Run `Greenhold.Manager.exe event-source remove` before you remove the Manager from a computer.
-
+The Manager writes warnings, errors and all security events to its event log (Greenhold > Manager).
+At start it says in its console where the events go.
+When the log is not registered, for example when you start the Manager from a folder and not from the installer, it shows a warning at start.
 ### Agent
 
 The agent log rotates at 5 MB and keeps three files.
-The agent writes nothing to the Windows Event Log.
+The agent writes its start, its stop, its warnings and its errors to its event log (Greenhold > Agent).
 The folder is for administrators and SYSTEM only.
 The log shows the refusal code when the agent refuses an Order.
 
@@ -68,6 +91,7 @@ The log shows the refusal code when the agent refuses an Order.
 
 Every product writes security events under the category `Greenhold.Security`.
 Each event has an ID that never changes.
+In the event logs, this ID is the value `LogEventId` of the events 4000 to 4002.
 Use the IDs to alert.
 
 | IDs | Product |
@@ -102,7 +126,7 @@ Plan for these warnings:
 The gateway writes 3606 to 3608 once each time it starts.
 `greenhold-library` writes 6004 to 6006 once for each library, when you run `license` or `refresh`.
 
-Anybody who can use the Event Log can write an entry under the name of a source.
+Any program on the computer can write an event under the name of a Greenhold product.
 An entry says that something wrote it.
 It does not prove that the product wrote it.
 Compare an alert with the log file of the gateway and with the database.
