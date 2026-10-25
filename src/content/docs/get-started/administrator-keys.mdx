@@ -158,7 +158,20 @@ A folder directly under the root of a drive, such as `C:\GreenholdRoot`, gets it
 These permissions include **Authenticated Users: Modify**.
 Greenhold Admin refuses such a folder, and `greenhold-sign` refuses every proof in it.
 
-Run this one time, in PowerShell as an administrator.
+**In Greenhold Admin**, the box **Others can change the root folder** shows on Home, Administrator keys and Trusted vendors.
+The certify panel also shows **Fix it** under the problem.
+
+1. Choose **Fix it**. A panel shows what changes:
+   - The root's folder and its `attestation-roots` folder: full control for Administrators, SYSTEM and you only. They no longer get permissions from the drive.
+   - The other files and folders in the root's folder get these permissions from it. A key file that is locked to your account stays locked.
+   - A file or folder that another account owns gets Administrators as its owner.
+2. Choose **Change the permissions**.
+3. Windows asks you to approve it as an administrator. Only this change runs as an administrator. Greenhold Admin itself keeps running as you.
+
+You cannot undo this in Greenhold Admin. To change the permissions later, use the folder's **Security** properties.
+A junction or a link in the folder stops the change.
+
+**With PowerShell**, run this one time as an administrator.
 Change the path to the root's folder:
 
 ```powershell
@@ -222,6 +235,9 @@ Another computer cannot open the file.
 ## Renew a key
 
 The list shows the status of each key: **Waiting for the root**, **Certificate to unlock**, **Certified**, **Expires soon** (30 days or less), **Expired** or **Revoked**.
+The colours are the Manager's: green is fine, amber needs you, red is expired or revoked, blue waits for somebody else.
+After each action the page reads the folders again and shows the result above the list.
+A certificate that you save to another folder is not in the list. The page tells you.
 
 <Tabs syncKey="interface">
 <TabItem label="GUI">
@@ -244,8 +260,8 @@ Certify a new request of the same key with `admin-certify`, as above.
 <TabItem label="GUI">
 
 1. Choose **Revoke** on the key.
-2. Tick **Revoke this key**.
-3. Confirm with the root.
+2. You cannot undo this. Tick **I understand that I cannot undo this**.
+3. Confirm with the root, and choose the red **Revoke the key**.
 
 The root signs the next revocation list, `revocations.txt`, in the root's folder.
 Each list holds all keys of the earlier lists.
