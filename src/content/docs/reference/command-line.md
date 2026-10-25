@@ -199,8 +199,7 @@ Run `greenhold-sign --help` for all options.
 
 | Command | Job |
 |---|---|
-| `event-source create` | Register the event source `Greenhold Manager` in the Application log. Run it elevated. Restart the Manager afterwards. |
-| `event-source remove` | Remove the event source. Stop the Manager first. |
+
 | `support-bundle --out <folder> [--log <console capture>]` | Write a redacted bundle for support. It starts no web server. |
 
 ## greenhold-library
@@ -227,7 +226,7 @@ Run `greenhold-library --help` for all commands.
 | `schedule --library <location> --at <time> --account <account>` | Register the refresh as a task in Task Scheduler, as an account that you choose. |
 | `issue-read-access --library <address> <writer options> --out <file> [--valid-days 1-7]` | Write a read access for Library Installers on masters. |
 | `publish-library-installer --library <location>` | Put the Library Installer set in the library. |
-| `event-source create` | Register the event source `Greenhold Library`. |
+
 | `support-bundle --out <folder> [--library <location>]` | Write a redacted bundle for support. |
 
 | Exit code | Meaning |
