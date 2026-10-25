@@ -1,20 +1,38 @@
 ---
 title: Run a PowerShell script on a device
-description: Write a script, sign a Release and an Order, store them on the gateway and read the result.
+description: Make a job in the Manager, sign it with Greenhold Admin, and read the Runs. Or do the same with the command line.
 ---
 
-This page shows the whole path for one script on one device.
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+This page shows the whole path for one script on one or more devices.
+In the Manager, a **job** is a script or a package, the devices, and a time window.
+The Manager writes the signed objects for you: a **Release** (what runs) and an **Order** (where and when).
+Nothing runs until administrators sign the job and the Manager sends it.
 
 Before you start, you need these items:
 
 - An installation root and an administrator key with a certificate. See [Before you install](/get-started/before-you-install/).
 - A running gateway and an enrolled device. See [Enroll your first device](/get-started/enroll-your-first-device/).
-- The tool `greenhold-sign` on your own computer. Admin Tools installs it. Never use the server for signing.
+- Greenhold Admin on your own computer. It also installs `greenhold-sign`. Never use the server for signing.
 - A second administrator key, if the Order needs two signers. See [When you need two signers](#when-you-need-two-signers).
 
-## Find the values
+## When you need two signers
 
-You need these values for the drafts:
+By default, an Order needs two signers in these cases:
+
+- The device is a server. `Greenhold.Agent.exe status` shows `Server: yes`.
+- The Order names a tag.
+- The device has not reported whether it is a server. It may be one.
+- The Order names more than 25 devices.
+
+The policy of the agent can change these rules.
+The Manager applies the same rules to what the devices reported, and asks for a second signer when they need one.
+See [Second signer and tags](/dispatch/second-signer-and-tags/).
+
+## Find the values (command line only)
+
+The Manager finds these values itself. On the command line, you need them for the drafts:
 
 | Value | Where to find it |
 |---|---|
@@ -27,18 +45,40 @@ To read the installation ID in PowerShell:
 (Get-Content -Raw root.public.json | ConvertFrom-Json).installationId
 ```
 
-### When you need two signers
+## Make and sign the job
 
-By default, an Order needs two signers in these cases:
+<Tabs syncKey="interface">
+<TabItem label="GUI">
 
-- The device is a server. `Greenhold.Agent.exe status` shows `Server: yes`.
-- The Order names a tag.
-- The Order names more than 25 devices.
+1. In the Manager, open **New job**.
+2. Type a **Name of the job**, for example `Restart the print spooler`. The name is not signed.
+3. Under **1. What**, choose **Runs a PowerShell script**. Choose the **Script file**, or paste the script in **Or paste the script**. A script has at most 1 MiB. Do not put secrets in a script: every administrator who can read the job can read it. A script with characters other than plain ASCII must be saved as UTF-8 with BOM. See [The encoding rule](/manager/sign-with-greenhold-admin/#the-encoding-rule).
+4. Under **2. Where**, tick the **Devices**. Or choose **Or every device with this tag**. The tag adds the devices that report it now. A device that gets the tag later does not get this job.
+5. Under **3. When**, set the **Start (UTC)** and the **End (UTC)**. The end is at most 30 days after the start. A device that has not started the job by the end does not run it. The device's own run timeout stops a step that runs too long.
+6. Under **4. Signatures**, tick **Ask a second administrator to sign in any case** if you want two signers. The Manager also asks for a second signer when the agents' rules need one. See [When you need two signers](#when-you-need-two-signers).
+7. Choose **Make the job and check it**.
+8. On the job page, check what the job does. Then choose **Sign with Greenhold Admin**.
+9. Greenhold Admin opens the **Release** first. Read the whole script and sign. Then it opens the **Order** by itself. Check the devices, the start and the end, and sign. See [Sign with Greenhold Admin](/manager/sign-with-greenhold-admin/).
 
-The policy of the agent can change these rules.
-See [Second signer and tags](/dispatch/second-signer-and-tags/).
+![The New job page, part 1](../../../assets/screens/manager-new-job.png)
 
-## 1. Write the script
+When the job has every signature that it needs, the Manager sends it to the gateway.
+If the Manager cannot send it, for example because of the license, the job stays **signed, not sent** with a **Send** button.
+
+The Manager checks each signature against the installation root before it keeps it.
+Each device checks the signatures again before it runs anything.
+
+**A second administrator.** When the job needs two signers, it waits with the state **Waiting for a second administrator**.
+Another administrator signs in to the Manager, opens the job and chooses **Sign as the second administrator**.
+Greenhold Admin adds the second signature to the first one.
+The second signer must be another person, with another administrator ID and another key.
+
+![A job that waits for a second administrator](../../../assets/screens/manager-job-second-signer.png)
+
+</TabItem>
+<TabItem label="CLI">
+
+**Step 1: Write the script**
 
 The agent runs the script with Windows PowerShell 5.1.
 Declare each value in `param()`.
@@ -62,7 +102,7 @@ Get the SHA-256 of the script:
 (Get-FileHash .\hello.ps1 -Algorithm SHA256).Hash.ToLower()
 ```
 
-## 2. Write the Release draft
+**Step 2: Write the Release draft**
 
 A draft is a JSON file.
 The layout of the file does not matter.
@@ -97,7 +137,7 @@ To get it in PowerShell:
 [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')
 ```
 
-## 3. Sign the Release
+**Step 3: Sign the Release**
 
 ```
 greenhold-sign sign --kind release --draft release.json --admin-key admin.key.json --cert admin.cert --out release.signed
@@ -110,7 +150,7 @@ Never give it as an argument.
 The command `hash` prints the hash of the Release.
 You need it in the Order.
 
-## 4. Write and sign the Order
+**Step 4: Write and sign the Order**
 
 Save the Order draft as `order.json`:
 
@@ -151,7 +191,7 @@ greenhold-sign sign --add-to order.signed --admin-key <key folder 2>\admin.key.j
 Then use `order2.signed` in the next steps.
 See [Second signer and tags](/dispatch/second-signer-and-tags/).
 
-## 5. Check like an agent
+**Step 5: Check like an agent**
 
 ```
 greenhold-sign verify --order order.signed --release release.signed --root root.public.json --device-id <device id>
@@ -161,7 +201,7 @@ The tool prints `ACCEPTED`, or `REFUSED` with a code.
 Add `--server` when the device is a server.
 This check does not replace the check of the agent.
 
-## 6. Store the Order on the gateway
+**Step 6: Store the Order on the gateway**
 
 Copy these files to the gateway computer:
 
@@ -192,7 +232,38 @@ The gateway queues one Run for each device.
 The agent hears of the Order at its next look.
 This can take a few minutes.
 
-## 7. Watch the Run
+</TabItem>
+</Tabs>
+
+## Watch the Runs
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+1. In the Manager, open **Jobs**. The list shows the state of each job and how many Runs finished.
+2. Choose the job. The page shows what the job does, where and when, the signatures, and a Run for each device.
+3. Choose a Run. The page shows the state, the exit code, what the device says, and the output. A refused Run says why in a sentence.
+
+![The Jobs page](../../../assets/screens/manager-jobs.png)
+
+| Job state | Meaning |
+|---|---|
+| Draft | The job is made. Nobody signed it yet. |
+| Waiting for signature | The job waits for the first administrator. |
+| Waiting for a second administrator | The Order needs a second signer. |
+| Signed, not sent | Every signature is there. Choose **Send**. |
+| Sent | The gateway has the job. The devices hear of it at their next look. |
+| Running | Devices run the job. |
+| Done | Every Run finished. |
+| Failed | A Run failed or was refused. |
+| Cancelled | An administrator chose **Cancel this job**. |
+
+![The page of a Run](../../../assets/screens/manager-job-run.png)
+
+The device's output is kept for 90 days after a Run finishes.
+
+</TabItem>
+<TabItem label="CLI">
 
 ```powershell
 & $gw run list --limit 50
@@ -209,6 +280,11 @@ For `--device`, the first characters of the ID from `run list` are enough.
 
 To run the work again, sign a new Order with a new ID.
 To change the script, sign a new Release with a higher version.
+
+</TabItem>
+</Tabs>
+
+To run the work again in the Manager, make a new job.
 
 ## Next
 

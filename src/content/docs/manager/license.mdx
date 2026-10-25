@@ -1,0 +1,158 @@
+---
+title: License
+description: See the license and the days left, install a license file, ask for a license, and reset the clock mark.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+A license is made for one installation.
+It sets the products and the number of devices.
+
+## Use without a license
+
+Without a license, Greenhold works for **90 days**, with up to 5 devices and 5 packages in each library.
+All functions work in this period.
+
+The 90 days are **one period for the installation**.
+Greenhold Dispatch and Greenhold Library share it.
+The period starts at the earliest of these dates:
+
+- the date of the installation root,
+- the first start of the database,
+- the creation date of a library of the installation.
+
+A new database or a new library does not give new days.
+A clock that is set back by more than 3 days ends the period.
+
+The Manager shows the days left during the whole period.
+From 15 days before the end, every page shows a notice, and the gateway writes a warning to the Windows event log.
+
+After the 90 days, **new work stops** until you install a license:
+
+| Stops | Stays |
+|---|---|
+| Enrolling devices and making tokens | Connected devices stay connected |
+| New Releases and Orders | Releases already deployed keep running |
+| New packages, versions and publications in a library without a license | Reading, the audit trail, export, Revoke, and Orders that only seal a device |
+
+A license restores everything at once.
+
+## See the license
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+In the Manager, open **License**.
+The section **This installation's license** shows the products, the devices, the end date and the installation.
+Without a license, it shows the days left.
+
+</TabItem>
+<TabItem label="CLI">
+
+On the Greenhold server, in an elevated PowerShell:
+
+```powershell
+& 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' license show
+```
+
+For a library:
+
+```powershell
+greenhold-library license --library <location>
+```
+
+</TabItem>
+</Tabs>
+
+## Ask for a license
+
+You send a **license request file** to your supplier.
+The file holds the installation ID, the key ID of the root, the products and the number of devices.
+It holds no personal data and no secret.
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+1. In the Manager, open **License**.
+2. Under **Ask for a license**, choose **Save the license request**.
+3. Send the file to your supplier.
+
+Greenhold Admin and the setup wizard make the same file.
+See [Greenhold Admin](/get-started/admin-tools/#request-a-license).
+
+</TabItem>
+<TabItem label="CLI">
+
+In this version, there is no command for a license request.
+Use the Manager, Greenhold Admin or the setup wizard.
+
+</TabItem>
+</Tabs>
+
+## Install a license
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+You must be an Administrator in the Manager.
+
+1. In the Manager, open **License**.
+2. Under **Install a license**, choose **License file** and select the file you received.
+3. Choose **Install the license**.
+
+The Manager checks the signature of the file and that it is for this installation, as the gateway does.
+Then it installs the file.
+The new file replaces the license that is installed now.
+If the file is not valid, the page says why in one sentence.
+
+</TabItem>
+<TabItem label="CLI">
+
+On the Greenhold server, in an elevated PowerShell:
+
+```powershell
+& 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' license install --file <license file> --root C:\ProgramData\Greenhold\Gateway\root.public.json
+```
+
+For a library:
+
+```powershell
+greenhold-library license-import --library <location> --file <license file>
+```
+
+</TabItem>
+</Tabs>
+
+## Reset the clock mark
+
+The **clock mark** is the latest time of the database's clock that this installation has seen.
+When the database's clock is more than 3 days behind the mark, new work stops.
+A clock that was set back could otherwise make an expired license seem valid.
+
+Reset the mark only when both clocks are correct now, and the mark is ahead only because a clock was too fast for some time.
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+You must be an Administrator in the Manager.
+
+1. In the Manager, open **License**.
+2. Under **Clock mark**, choose **Reset the clock mark**. The Manager offers this only when the mark stops new work.
+3. Read **Before you reset** and confirm.
+
+The database refuses the reset when its clock and the clock of the Manager's server differ by more than 3 days.
+The audit trail and the security log record who reset the mark, and the times before and after.
+
+</TabItem>
+<TabItem label="CLI">
+
+On the Greenhold server, in an elevated PowerShell:
+
+```powershell
+& 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' license clock reset
+```
+
+The command uses the connection string of the migration role (`gh_migrator`).
+
+</TabItem>
+</Tabs>

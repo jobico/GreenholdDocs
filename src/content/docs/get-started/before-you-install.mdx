@@ -1,0 +1,89 @@
+---
+title: Before you install
+description: Make the installation root and the first administrator key on your own computer, before you install the server.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Do these steps on your own computer, not on the server.
+The server then receives only a public file, `root.public.json`.
+
+## 1. Install Greenhold Admin
+
+Install [Greenhold Admin](/get-started/admin-tools/) on your own computer.
+It makes the root and the keys in a window.
+It also installs `greenhold-sign`, which does the same on the command line:
+
+```
+C:\Program Files\Greenhold\Admin Tools\greenhold-sign
+```
+
+## 2. Make the installation root
+
+The installation root is a signing key.
+Agents run an Order only when an administrator signed it with a key that the root certified.
+The root also gives your **installation ID**, a GUID.
+You cannot change the ID later.
+A license is made for one installation ID.
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+In Greenhold Admin, open **Installation root** and make the root.
+See [Make the installation root](/get-started/admin-tools/#make-the-installation-root).
+
+</TabItem>
+<TabItem label="CLI">
+
+```powershell
+$id = [guid]::NewGuid().ToString()
+greenhold-sign root-create --installation $id --out <root folder>
+```
+
+Add `--store tpm` or `--store smartcard` to keep the root in the TPM or on a security key.
+The command prints the key ID of the root and the policy value for the agents.
+
+</TabItem>
+</Tabs>
+
+:::caution
+Keep the root offline.
+For a key file, keep `root.key.json` on a USB drive and make a backup.
+Without the root, nobody can certify a key for this installation again.
+Take only `root.public.json` to the server.
+:::
+
+## 3. Make and certify your administrator key
+
+Make your key in the TPM or on a security key.
+The root holder certifies it.
+See [Administrator keys](/get-started/administrator-keys/).
+
+Use a role name for the administrator ID and name, for example `release-admin-1`.
+Do not use the name of a person.
+Every signature keeps them for good.
+
+## 4. Optional: request a license
+
+You can start without a license.
+Greenhold then works for 90 days, with up to 5 devices and 5 packages.
+See [License](/manager/license/#use-without-a-license).
+
+To request a license, use Greenhold Admin, the setup wizard or the Manager.
+See [Request a license](/get-started/admin-tools/#request-a-license).
+
+## Passphrases on the command line
+
+`greenhold-sign` asks for a passphrase when it needs one.
+A passphrase has at least 10 characters.
+The tool never takes a passphrase as an argument.
+To give it without a prompt, set `GREENHOLD_ROOT_PASSPHRASE` or `GREENHOLD_ADMIN_PASSPHRASE`.
+Remove the variables when you are done:
+
+```powershell
+Remove-Item Env:GREENHOLD_*_PASSPHRASE
+```
+
+## Next
+
+Read [Install the server](/get-started/install-the-server/).

@@ -3,6 +3,8 @@ title: Second signer and tags
 description: When an Order needs two administrators, how to add the second signature, and what a tag does.
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 Some Orders need two signers.
 The two signers must have different administrator IDs and different keys.
 The policy of the agent decides when an Order needs a second signer.
@@ -30,6 +32,32 @@ See [Policy for agents](/concepts/policy-for-agents/) to set these values.
 
 ## Add the second signature
 
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+The Manager works out from what the devices reported whether a job needs two signers.
+You can also ask for a second signer on **New job**, with **Ask a second administrator to sign in any case**.
+
+1. The first administrator makes the job and signs it with Greenhold Admin.
+2. The job waits with the state **Waiting for a second administrator**.
+3. A second administrator signs in to the Manager and opens the job from **Jobs**.
+4. The second administrator reads **What it does** and **Where and when**, and chooses **Sign as the second administrator**.
+5. Greenhold Admin shows the Order and who signed it already. The second administrator signs with their own key.
+
+Greenhold Admin adds the second signature to the first one.
+Then the Manager sends the job.
+
+![A job that waits for a second administrator](../../../assets/screens/manager-job-second-signer.png)
+
+The Manager and Greenhold Admin refuse these cases:
+
+- The same person signs twice.
+- The same administrator ID, key or certificate signs twice.
+- A second signature without the first.
+
+</TabItem>
+<TabItem label="CLI">
+
 The first administrator signs the Order.
 The second administrator adds a signature with their own key:
 
@@ -38,12 +66,15 @@ greenhold-sign sign --add-to order.signed --admin-key <key folder 2>\admin.key.j
 ```
 
 The second administrator needs a certified key of their own.
-See [Make a second administrator key](/get-started/before-you-install/#make-a-second-administrator-key).
+See [Make a second administrator key](/get-started/administrator-keys/#make-a-second-administrator-key).
 The hash of the Order does not change.
 Store `order2.signed` on the gateway with `order add`.
 
 To see what an agent will do, use `greenhold-sign verify`.
 The options `--second-signer-above`, `--always-second-signer` and `--no-second-signer` set the policy for the check.
+
+</TabItem>
+</Tabs>
 
 ## Tags
 
@@ -62,4 +93,8 @@ For this reason, an Order for a tag needs two signers.
 The gateway does not route Orders for a tag yet.
 The command `order add` refuses an Order that names a tag.
 Name the device IDs in the Order.
+
+On **New job** in the Manager, a tag adds the devices that report it now.
+The job names them one by one.
+A device that gets the tag later does not get the job.
 :::

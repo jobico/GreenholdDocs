@@ -1,0 +1,163 @@
+---
+title: Greenhold Admin
+description: The program for your own computer that makes the root and the keys, writes the license request, and signs what the Manager asks for.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Greenhold Admin is a Windows program for **your own computer**.
+In version 0.1.3 its name was Admin Tools.
+
+It does these tasks:
+
+- It makes the installation root.
+- It makes administrator keys, in the TPM, on a security key or in a key file.
+- It certifies keys with the root, and renews and revokes them.
+- It writes a license request.
+- It signs what the Manager asks for: a library publication, a job, the key of the automatic publisher.
+
+:::caution
+Never install Greenhold Admin on the Greenhold server.
+The root and the keys must not be on a computer that other people can use.
+:::
+
+## Install
+
+1. Download `Greenhold-AdminTools-<version>-x64.msi`. It is a separate file from the server installer.
+2. Run it as an administrator of the computer.
+
+The installer does these things:
+
+- It installs the program for all users, in `C:\Program Files\Greenhold\Admin Tools`.
+- It installs `greenhold-sign.exe` in a folder beside it.
+- It adds the Start menu shortcut **Greenhold Admin**.
+- It registers the `greenhold://` link for all users. The Manager's button **Sign with Greenhold Admin** uses this link.
+
+It adds no service, no firewall rule and no change to PATH.
+You do not need administrator rights to use the program.
+It runs as you and writes the files that you choose.
+
+To remove it, use Windows Settings.
+Your root, keys, certificates and requests stay.
+They are your files.
+
+## The steps
+
+The **Home** page shows the steps in order:
+
+1. Make the installation root.
+2. Request a license.
+3. Make your administrator key. See [Administrator keys](/get-started/administrator-keys/).
+4. Install the server. Copy `root.public.json` to the server. The setup wizard imports it.
+
+## Make the installation root
+
+The root certifies the keys of your administrators.
+Make it one time for each installation.
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+1. Open **Installation root**. The page makes your **installation ID**, a GUID. Your license is for this ID.
+2. Under **Where to keep the root's key**, choose one:
+   - **A key file with a passphrase**. Type a passphrase of at least 10 characters two times. Nobody can reset it.
+   - **This computer's TPM**. The key cannot leave this computer. Keep this computer offline. There is no second copy.
+   - **A security key**. A PIV security key or smart card, such as a YubiKey. Plug it in first. It asks for its own PIN. There is no second copy.
+3. In **Save to**, choose a folder on a USB drive. Keep the drive offline and make a second copy.
+4. Choose **Make the root**.
+
+</TabItem>
+<TabItem label="CLI">
+
+Make an installation ID:
+
+```powershell
+[guid]::NewGuid().ToString()
+```
+
+Make the root in a key file on a USB drive:
+
+```
+greenhold-sign root-create --installation <id> --out <root folder>
+```
+
+Or in the TPM, or on a security key:
+
+```
+greenhold-sign root-create --installation <id> --out <root folder> --store tpm
+greenhold-sign root-create --installation <id> --out <root folder> --store smartcard
+```
+
+The command refuses an installation ID that is not a GUID.
+It refuses `--store software` for a root.
+
+</TabItem>
+</Tabs>
+
+You get these files in the folder:
+
+- `root.key.json` is the private key, encrypted with your passphrase. Only for a key file. It stays offline.
+- `root.public.json` is the public part. The server and the agents use it. It holds no secret.
+
+A root in the TPM or on a security key is a certificate in your certificate store (Current User, Personal), named *Greenhold installation root*.
+Greenhold Admin finds it from `root.public.json` in the root's folder.
+
+The page shows the **key ID** of the root.
+The program never overwrites a root or a key.
+
+These warnings can show:
+
+- **A server computer.** This computer runs a Greenhold service. Use another computer. To continue, tick **I understand**.
+- **A drive in the computer, or a network folder.** A USB drive that you keep offline is safer.
+- **A drive that cannot lock a file**, such as a FAT or exFAT USB drive. Your passphrase protects the file.
+
+## Request a license
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+1. Open **License request**. The page reads the installation ID from `root.public.json`.
+2. Choose the products.
+3. Type the number of devices.
+4. Choose **Trial** or **License**.
+5. Choose **Save request file**. Send the file to your supplier.
+
+</TabItem>
+<TabItem label="CLI">
+
+In this version you do this with Greenhold Admin, the setup wizard or the Manager.
+There is no command for it.
+
+</TabItem>
+</Tabs>
+
+The file holds no personal data.
+You can open it in a text editor.
+You get a license file back.
+
+Without a license, Greenhold works for 90 days, with up to 5 devices and 5 packages.
+See [License](/manager/license/).
+
+## Sign what the Manager asks for
+
+Open the task in the Manager and choose **Sign with Greenhold Admin**.
+Greenhold Admin opens and shows what you sign.
+See [Sign with Greenhold Admin](/manager/sign-with-greenhold-admin/).
+
+## What the program keeps
+
+- It keeps a passphrase in memory only while you press the button. It writes no log.
+- It never puts a passphrase on a command line or in a file.
+- It keeps the names of the last folders and the Managers you trusted in `%LOCALAPPDATA%\Greenhold\AdminTools\settings.json`.
+- It makes key files that only you and Administrators can read.
+
+## Not yet in this version
+
+- Greenhold Admin does not send the revocation list to the agents. See [Administrator keys](/get-started/administrator-keys/#revoke-a-key).
+- Signing an amendment in the window. Use `greenhold-sign sign --kind policy`.
+- Passkeys and vault keys. They have no proof yet, so the root cannot certify them.
+- Removing a key from your certificate store. Revoke the key. Then delete the certificate with `certmgr.msc`.
+
+## Next
+
+Read [Administrator keys](/get-started/administrator-keys/).

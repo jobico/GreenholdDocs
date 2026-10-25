@@ -277,4 +277,4 @@ The message says that the free period is over.
 Install it on the server with `Greenhold.Gateway.exe license install`, or in the setup wizard.
 Import it in a library with `greenhold-library license-import --library <location> --file <license>`.
 A license restores all functions at once.
-See [Use without a license](/get-started/before-you-install/#use-without-a-license).
+See [Use without a license](/manager/license/#use-without-a-license).

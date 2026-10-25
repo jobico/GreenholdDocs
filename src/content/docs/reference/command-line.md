@@ -49,7 +49,7 @@ The program is in `C:\Program Files\Greenhold\Gateway`.
 Enrolling a device and storing a new Order need a valid license or the starter allowance.
 The starter allowance is 5 devices for 90 days.
 The other commands work with any license, and after the 90 days.
-See [Use without a license](/get-started/before-you-install/#use-without-a-license).
+See [Use without a license](/manager/license/#use-without-a-license).
 
 ### Audit trail
 
@@ -211,17 +211,11 @@ Run `greenhold-library --help` for all commands.
 
 | Command | Job |
 |---|---|
-<<<<<<< HEAD
-| `create --library <location> [--name <name>] [--installation <id>]` | Make a library. It prints the library ID and the installation ID. `--installation` is the `installationId` of `root.public.json`, a GUID. |
-| `pin-root --library <location> --root <root.public.json>` | Pin the installation root on this computer. |
-| `add-package --library <location> --package <id> --name <name> [--winget \| --url <address>] [--installer-type <type>]` | Add a package. `--installer-type` picks one installer type when the source offers several. |
-=======
 | `create --library <location> [--name <name>] [--installation <id>]` | Make a library. It prints the library ID and the installation ID. On the Greenhold server, it uses the installation of the root that setup holds, and says so. `--installation` names another installation. |
 | `pin-root --library <location> [--root <root.public.json>]` | Pin the installation root on this computer. On the Greenhold server, it uses the root that setup holds, and says so. On other computers, `--root` is necessary. |
 | `license --library <location>` | Show the license of the library. Without a license, it shows the days left. |
 | `license-import --library <location> --file <license>` | Import a license into the library. |
-| `add-package --library <location> --package <id> --name <name> [--winget \| --url <address>]` | Add a package. |
->>>>>>> dev/security-batch-2-docs
+| `add-package --library <location> --package <id> --name <name> [--winget \| --url <address>] [--installer-type <type>]` | Add a package. `--installer-type` picks one installer type when the source offers several. |
 | `add-version --library <location> --package <id> --version <v> --file <file>` | Add a version by hand. It becomes a candidate. |
 | `show --library <location>` | Show the packages, their versions and their candidates. |
 | `refresh --library <location>` | Check the sources, store candidates and write a draft. It never publishes. |

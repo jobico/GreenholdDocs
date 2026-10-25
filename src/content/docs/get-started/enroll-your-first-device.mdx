@@ -1,7 +1,9 @@
 ---
 title: Enroll your first device
-description: Install the agent, make a token, enroll, and check the result.
+description: Install the agent, make a token in the Manager, enroll, and check the result.
 ---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 The last page of the setup wizard shows the command line for the agent installer.
 It uses the values of your server.
@@ -28,7 +30,7 @@ These are the POLICY values:
 :::caution[A software key needs one more property]
 An agent accepts only hardware-backed keys by default: Windows Hello, passkey, security key and vault.
 It refuses an Order that is signed with a software key.
-The keys of Admin Tools and of the setup wizard are software keys.
+A key file of Greenhold Admin and the key that the setup wizard makes on the server are software keys.
 For a lab, add this property to the command:
 
 ```
@@ -55,41 +57,79 @@ Every process on the computer can see a command line.
 
 ## 2. Make a token
 
+A token lets one device enroll one time.
+It lasts at most 7 days.
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+1. In the Manager, open **Add devices**.
+2. Choose **One token for each name in a list**. Type the name of the computer, for example `PC-01`.
+3. In **The tokens expire after**, choose a time, for example **1 day**.
+4. Choose **Make the tokens and download the file**.
+
+You get a CSV file with the columns `name`, `token` and `expires`.
+For many devices, see [Add devices](/manager/add-devices/).
+
+</TabItem>
+<TabItem label="CLI">
+
 On the server, open an elevated PowerShell:
 
 ```powershell
-cd "C:\Program Files\Greenhold\Gateway"
-.\Greenhold.Gateway.exe token new --name PC-01 > token.txt
+cd "C:Program FilesGreenholdGateway"
+.Greenhold.Gateway.exe token new --name PC-01 > token.txt
 ```
 
-`--name` is required.
+`--name` or `--pattern` is required.
 Use a pseudonym or the computer name.
-The token is shown once.
-It works for one enrollment attempt.
-It lasts at most 7 days.
+The token is shown one time.
 Use `--lifetime` to set a shorter life, for example `--lifetime 2:00:00`.
+
+</TabItem>
+</Tabs>
 
 ## 3. Enroll
 
-Move `token.txt` to the agent computer over a protected route.
-Enroll with the token on standard input.
-Then delete the file:
+On the agent computer, open an elevated PowerShell and run:
 
 ```powershell
-Get-Content token.txt | & "C:\Program Files\Greenhold\Agent\Greenhold.Agent.exe" enroll
+& "C:Program FilesGreenholdAgentGreenhold.Agent.exe" enroll
+```
+
+The agent asks for the token.
+Paste it.
+The agent does not show the token while you type or paste it.
+It prints one line, for example `Enrolled. Device ID: <device id>. Key protection: TPM.`
+
+To enroll from a script, give the token file on standard input.
+Move the file over a protected route, and delete it after:
+
+```powershell
+Get-Content token.txt | & "C:Program FilesGreenholdAgentGreenhold.Agent.exe" enroll
 Remove-Item token.txt
 ```
 
 :::tip
-Use standard input.
+Never put the token on the command line. `enroll` refuses it.
 Do not use `--token-file`.
 That option deletes its file after enrollment and can fail when it cannot delete.
 :::
 
 If enrollment fails, make a new token.
-The first attempt uses up a token.
+Each try uses the token.
 
 ## 4. Check
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+In the Manager, open **Devices**.
+The device shows the state **Enrolled** and, after its first contact, the Session **Connected**.
+Choose the device to see its details.
+
+</TabItem>
+<TabItem label="CLI">
 
 On the agent computer, in an elevated PowerShell:
 
@@ -115,6 +155,9 @@ Write down two lines of the `status` output:
 
 `agent list` shows only the first 8 characters of the device ID.
 `agent list --wide` shows the whole ID.
+
+</TabItem>
+</Tabs>
 
 ## Next
 

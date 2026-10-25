@@ -1,0 +1,268 @@
+---
+title: Create a library and add a package
+description: Make a library, pin the root, add a package, refresh, sign the draft and publish it.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+A library belongs to one installation.
+The root of that installation certifies the keys that sign it.
+
+The easy way is the setup wizard and the Manager.
+The command line `greenhold-library` does the same, for scripts.
+The server installer installs `greenhold-library` on the Greenhold server.
+
+## 1. Create the library
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+The setup wizard has a **Library** page after the **License** page.
+You can run the wizard again later to add the library.
+
+1. Choose **Make a Library for this installation**.
+2. In **Folder of the Library**, type a full path or a UNC path. The folder must be empty or hold a library of this installation.
+3. Optional: type a **Name**.
+4. Continue to **Review and start** and choose **Apply**.
+
+![The Library page of the setup wizard](../../../assets/screens/setup-library.png)
+
+The wizard does these things for you:
+
+- It makes the library for the installation of the root from the earlier steps. You do not type an installation ID.
+- It pins that root on the server.
+- It connects the library to the Manager. The Manager shows it under **Libraries**.
+- It gives the refresh service the library. The service refreshes it every day at 02:00, and when somebody asks in the Manager.
+- It sets up automatic publishing. It makes the publisher's key and shows the **key ID** in its result. The root holder certifies the key later. See [Keep apps current](/library/keep-apps-current/#automatic-publishing).
+
+The wizard never overwrites a library:
+
+- If the folder holds a library of this installation, the wizard only pins the root.
+- If the folder holds a library of another installation, the wizard stops and changes nothing.
+- If the folder holds other files, the wizard stops.
+
+The account that runs the wizard needs write access to the folder or the share.
+For a local folder, the wizard refuses a link in the path, and a folder that another account owns.
+For a share, give the local path when the share is on this server.
+
+On a share, the Manager and the two Library services act as **this computer's account**.
+The wizard gives that account permission to change files in the folder.
+Every service on the server that uses the network then has that permission too.
+Publications stay signed, but such a service could delete or change files.
+For a library on a share, use a server that runs only Greenhold, or set the permission yourself for a group that you choose.
+The wizard changes only the NTFS permissions, never the share permissions.
+
+</TabItem>
+<TabItem label="CLI">
+
+On the Greenhold server, in an elevated prompt:
+
+```
+greenhold-library create --library \\files\library --name "Library"
+```
+
+`--library` is a full path or a UNC path.
+A relative path is refused.
+On the Greenhold server, `create` uses the installation of the root that setup holds.
+The command prints the installation ID and the key ID that it used.
+Compare the key ID with the key ID of the root holder.
+
+On another computer, give the installation ID:
+
+```
+greenhold-library create --library \\files\library --name "Library" --installation <installation id>
+```
+
+The installation ID is `installationId` in `root.public.json`, a GUID.
+
+</TabItem>
+</Tabs>
+
+A library on Azure Blob storage is made with `greenhold-library create`.
+See [Azure Blob libraries](/library/azure-blob/).
+
+## 2. Pin the root
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+The setup wizard pins the root when it makes the library.
+There is nothing else to do.
+
+</TabItem>
+<TabItem label="CLI">
+
+On the Greenhold server:
+
+```
+greenhold-library pin-root --library \\files\library
+```
+
+On another computer:
+
+```
+greenhold-library pin-root --library \\files\library --root root.public.json
+```
+
+Get `root.public.json` from the root holder through a channel that the writers of the library cannot change.
+Compare the key ID that the command prints with the key ID of the root holder.
+A root of another installation is refused.
+
+</TabItem>
+</Tabs>
+
+## 3. Add a package
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+In the Manager, open **Libraries**, choose the library and open **Add an app**.
+Add the app from WinGet, from a fixed address, or by hand.
+See [Keep apps current](/library/keep-apps-current/#add-an-app).
+
+</TabItem>
+<TabItem label="CLI">
+
+```
+greenhold-library add-package --library <lib> --package 7zip.7zip --name "7-Zip" --winget --installer-type wix
+greenhold-library add-package --library <lib> --package Contoso.Tool --name "Tool" --url https://downloads.example.com/tool.msi --installer-type msi
+greenhold-library add-package --library <lib> --package Contoso.Internal --name "Internal tool"
+```
+
+| Source | Option | Notes |
+|---|---|---|
+| WinGet | `--winget` | Reads the signed index of WinGet. `--installer-type` picks one type when the manifest has several. |
+| URL | `--url` | The address must be `https`. |
+| PowerShell module | Set in the catalog of the library | Evergreen, Nevergreen or VcRedist. |
+| None | No option | You add each version by hand. |
+
+To add a version by hand:
+
+```
+greenhold-library add-version --library <lib> --package Contoso.Internal --version 1.2.0 --file tool.exe --installer-type exe --silent "/quiet"
+```
+
+</TabItem>
+</Tabs>
+
+:::caution
+Evergreen and Nevergreen run code that they fetch.
+They run it as the account of the refresh.
+Give that account no other rights.
+:::
+
+## 4. Refresh
+
+The refresh checks every source, stores new versions as candidates and checks the signature of each installer.
+It writes a draft of the next publication with the candidates that are ready.
+A candidate is ready when its cool-off time is over.
+A refresh never publishes.
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+In the Manager, open the library's page **Refresh** and choose **Refresh now**.
+See [Keep apps current](/library/keep-apps-current/#refresh-now-or-on-a-schedule).
+
+</TabItem>
+<TabItem label="CLI">
+
+```
+greenhold-library refresh --library <lib>
+greenhold-library show --library <lib>
+```
+
+`show` lists the packages, their versions and their candidates.
+
+Some WinGet packages offer more than one installer type.
+Then the refresh fails with a message such as `7zip.7zip offers 2 matching installers`.
+Give `--installer-type` in `add-package`.
+
+</TabItem>
+</Tabs>
+
+## 5. Draft
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+In the Manager, open the library's page **Draft**.
+The list **In short** says what the draft changes in plain words: an app added or removed, the version an app goes to, settings that change.
+Below it, the page shows the publisher's last run and every version that waits, with the reason.
+
+</TabItem>
+<TabItem label="CLI">
+
+```
+greenhold-library draft --library <lib> --ready
+```
+
+`--ready` adds every candidate whose cool-off time is over.
+For the first publication, use `--ready`.
+The command lists every field that differs and prints the `greenhold-sign` command to run.
+
+The draft is in `<library>\publication\draft.json`.
+Its content is in `<library>\publication\content\<sha256>.json`, where `<sha256>` is `content.hash` in `draft.json`:
+
+```powershell
+(Get-Content -Raw <library>\publication\draft.json | ConvertFrom-Json).content.hash
+```
+
+</TabItem>
+</Tabs>
+
+## 6. Sign and publish
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+1. On the library's page **Draft**, choose **Sign and publish**.
+2. Sign with Greenhold Admin on your own computer. Greenhold Admin shows every change. See [Sign with Greenhold Admin](/manager/sign-with-greenhold-admin/).
+3. The Manager checks the signed publication in full and publishes it.
+
+</TabItem>
+<TabItem label="CLI">
+
+Sign on your own computer:
+
+```
+greenhold-sign sign --kind publication --draft <library>\publication\draft.json --content <library>\publication\content\<sha256>.json --library <library> --root root.public.json --state <your folder> --admin-key admin.key.json --cert admin.cert --out publication.signed
+```
+
+The tool lists every change and asks you to confirm.
+`--state` is a folder on your own computer. Never put it in the library.
+Add `--first` for the first publication.
+`--valid-days` sets the validity: 180 days by default, 366 at most.
+
+Then publish:
+
+```
+greenhold-library publish --library <lib> --file publication.signed
+```
+
+The command refuses a signature that the pinned root does not vouch for.
+It refuses a draft that another publication overtook. Draft again.
+
+</TabItem>
+</Tabs>
+
+Sign a renewal before the validity ends.
+A reader does not accept a publication after its end.
+
+## Exit codes of greenhold-library
+
+| Code | Meaning |
+|---|---|
+| 0 | Done. |
+| 1 | Refused or failed. The message has a code and a line "What to do". |
+| 2 | The command line is not valid. |
+| 4 | A refresh ended with packages that failed. |
+| 5 | A refresh changed nothing, because another run holds the library. |
+
+Every command takes `--json` for a result that a script can read.
+A command never takes a secret as an option.
+
+## Next
+
+- [Keep apps current](/library/keep-apps-current/)
+- [Install a package on a device](/library/install-a-package/)

@@ -33,9 +33,19 @@ export default defineConfig({
             'get-started/first-steps',
             'get-started/requirements',
             'get-started/admin-tools',
+            'get-started/administrator-keys',
             'get-started/before-you-install',
             'get-started/install-the-server',
             'get-started/enroll-your-first-device',
+          ],
+        },
+        {
+          label: 'Manager',
+          items: [
+            'manager/sign-with-greenhold-admin',
+            'manager/add-devices',
+            'manager/revoke-and-forget',
+            'manager/license',
           ],
         },
         {
@@ -54,6 +64,7 @@ export default defineConfig({
             'library/overview',
             'library/libraries-and-packages',
             'library/create-a-library',
+            'library/keep-apps-current',
             'library/install-a-package',
             'library/remove-a-package',
             'library/library-installer',

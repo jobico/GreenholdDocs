@@ -1,7 +1,9 @@
 ---
 title: Install a package on a device
-description: Tell the agent where the library is, sign an InstallPackage Order, pin or follow the publication, and know what the agent does.
+description: Tell the agent where the library is, make a job that installs a package, pin or follow the publication, and know what the agent does.
 ---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 Dispatch installs a package with an `InstallPackage` Action in a signed Release.
 The Action names a package.
@@ -11,13 +13,23 @@ It never names a location.
 
 - A library with a signed publication. See [Create a library and add a package](/library/create-a-library/).
 - An enrolled device. See [Enroll your first device](/get-started/enroll-your-first-device/).
-- The steps to sign and store an Order. See [Run a PowerShell script on a device](/dispatch/run-a-powershell-script/).
+- Greenhold Admin and a certified administrator key. See [Sign with Greenhold Admin](/manager/sign-with-greenhold-admin/).
 
 The agent reads a folder or a share.
 It reads a share as the computer account.
 It does not read an Azure Blob address yet.
 
 ## 1. Tell the agent where the library is
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+In this version you do this with the command line.
+Choose the **CLI** tab above.
+Later versions set the library for a group of devices in the Manager.
+
+</TabItem>
+<TabItem label="CLI">
 
 The agent installs only from libraries that its policy lists in `Libraries`.
 Each entry has the library ID as its name and the folder or share as its value.
@@ -48,7 +60,29 @@ Restart the agent service after each change.
 Give the computer account of each agent computer read access to the share.
 Use a full local path only when the library is on the agent computer.
 
-## 2. Write the content of the Action
+</TabItem>
+</Tabs>
+
+## 2. Make the job
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+1. In the Manager, open **New job**.
+2. Type a **Name of the job**, for example `Install 7-Zip`.
+3. Under **1. What**, choose **Installs a package from a library**. Choose the **Package**.
+4. Leave **Install the version the library publishes when the job runs** cleared. The job then installs the active version of now, with its installer and its steps, and nothing else. This is the pinned form.
+5. Under **2. Where**, choose the devices.
+6. Under **3. When**, set the **Start (UTC)** and the **End (UTC)**.
+7. Choose **Make the job and check it**.
+8. Sign the job with Greenhold Admin. Greenhold Admin shows the package, the version and the SHA-256 of the installer. See [Run a PowerShell script on a device](/dispatch/run-a-powershell-script/).
+
+The Manager sends the job when it carries every signature that it needs.
+
+</TabItem>
+<TabItem label="CLI">
+
+Write the content of the Action:
 
 ```
 greenhold-sign install-spec --library <library folder> --library-id <id> --root root.public.json --package 7zip.7zip --out install.json
@@ -59,21 +93,9 @@ It prints the plan: every package it installs, with version, installer and switc
 Read the plan before you sign.
 It also prints the SHA-256 of `install.json`.
 
-The Action has one of two forms:
-
-| Form | Option | What the agent installs |
-|---|---|---|
-| Pinned | Default, or `--version <v>` | The version, the installer and the whole plan that the Action names. The agent refuses a later publication that changes any item of the plan. |
-| Published | `--follow-publication` | Whatever the verified publication names when the Order runs. |
-
-:::caution
-The published form lets a later publication change what runs.
-Use the pinned form for sensitive computers.
-:::
-
 Add `--refuse-automatic` to make the Action refuse automatic publications.
 
-## 3. Sign the Release and the Order
+Sign the Release and the Order:
 
 Write a Release draft with an Action of this form:
 
@@ -88,7 +110,7 @@ Sign the Release and the Order as in [Run a PowerShell script on a device](/disp
 Use a new `jobId` and a new `orderId`, for example `install-7zip` and `install-7zip-1`.
 If the device is a server, the Order needs two signers.
 
-## 4. Store the Order
+Store the Order:
 
 Copy the signed files and `install.json` to the gateway computer.
 Run this in an elevated PowerShell there:
@@ -97,7 +119,34 @@ Run this in an elevated PowerShell there:
 & 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' order add --release release.signed --order order.signed --content install.json
 ```
 
-## 5. Read the result
+</TabItem>
+</Tabs>
+
+The Action has one of two forms:
+
+| Form | In the Manager | On the command line | What the agent installs |
+|---|---|---|---|
+| Pinned | The default | Default, or `--version <v>` | The version, the installer and the whole plan that the Action names. The agent refuses a later publication that changes any item of the plan. |
+| Published | Tick **Install the version the library publishes when the job runs** | `--follow-publication` | Whatever the verified publication names when the job runs, also a publication of the automatic publisher. |
+
+:::caution
+The published form lets a later publication change what runs.
+Use the pinned form for sensitive computers.
+:::
+
+## 3. Read the result
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+In the Manager, open **Jobs** and choose the job.
+Choose the Run of a device to see its state, its exit code and its output.
+
+A Run that worked shows **Succeeded**.
+The output shows the pinned version, `SHA-256 verified` and `installed (exit 0)`.
+
+</TabItem>
+<TabItem label="CLI">
 
 Wait a few minutes. Then run:
 
@@ -109,7 +158,10 @@ Wait a few minutes. Then run:
 A Run that worked shows `succeeded`.
 The output shows the pinned version, `SHA-256 verified` and `installed (exit 0)`.
 
-If the Run shows `refused` with code 50, the policy of the agent does not list the library.
+</TabItem>
+</Tabs>
+
+If a Run is refused with code 50, the policy of the agent does not list the library.
 Do [step 1](#1-tell-the-agent-where-the-library-is) again and restart the agent service.
 
 ## What the agent does
