@@ -1,47 +1,98 @@
 ---
 title: First steps
-description: The whole path from a new server to a script that runs and a package that installs, in order, with a link to each step.
+description: The whole path from a new server to a script that runs and an app that installs, in order, with a link to each step.
 ---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 This page shows the whole path in order.
 Each step has one line and a link to the page with the details.
 Do the steps from top to bottom.
 
-## Prepare on your own computer
+Most steps have a **GUI** way and a **CLI** way.
+Choose a tab below.
+The other pages remember your choice.
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+**Prepare on your own computer**
 
 1. Check what you need: PostgreSQL 18 with TLS, a DNS name, an identity provider app and a certificate. See [Requirements](/get-started/requirements/).
-2. Install Admin Tools on your own computer, not on the server. See [Admin Tools](/get-started/admin-tools/).
-3. Make the installation root, your administrator key and its certificate. See [Before you install](/get-started/before-you-install/).
-4. Optional: request a license for the installation ID. See [Admin Tools](/get-started/admin-tools/#2-request-a-license).
+2. Install Greenhold Admin on your own computer, not on the server. See [Greenhold Admin](/get-started/admin-tools/).
+3. In Greenhold Admin, make the installation root. See [Make the installation root](/get-started/admin-tools/#make-the-installation-root).
+4. Make your administrator key in the TPM or on a security key, and have the root certify it. See [Administrator keys](/get-started/administrator-keys/).
+5. Optional: save a license request and send it to your supplier. See [Request a license](/get-started/admin-tools/#request-a-license).
 
-## Install the server
+**Install the server**
+
+6. Prepare PostgreSQL, the identity provider and the Manager certificate. See [Install the server](/get-started/install-the-server/#1-prepare-postgresql).
+7. Run the server installer. See [Run the installer](/get-started/install-the-server/#4-run-the-installer).
+8. Run the setup wizard. Import `root.public.json`. On the **Library** page, make the library. See [Run the setup wizard](/get-started/install-the-server/#5-run-the-setup-wizard).
+9. Choose **Open the Manager** on the last page and sign in one time.
+
+**Enroll the first device**
+
+10. Install the agent with the command line from the last page of the wizard. See [Enroll your first device](/get-started/enroll-your-first-device/).
+11. In the Manager, open **Add devices** and download a token. See [Add devices](/manager/add-devices/).
+12. On the device, run `Greenhold.Agent.exe enroll` and paste the token. See [Enroll](/get-started/enroll-your-first-device/#3-enroll).
+13. In the Manager, open **Devices** and check the device.
+
+**Run a script with Dispatch**
+
+14. If a job needs two signers, a second administrator makes and certifies a key. A server needs two. See [Second signer and tags](/dispatch/second-signer-and-tags/).
+15. In the Manager, open **New job**, choose the script and the device, and sign with Greenhold Admin. See [Run a PowerShell script on a device](/dispatch/run-a-powershell-script/).
+16. Open **Jobs** and read the Run. See [Watch the Runs](/dispatch/run-a-powershell-script/#watch-the-runs).
+
+**Install an app with Library**
+
+17. The root holder certifies the key of the automatic publisher on the library's page **Automatic publishing**. See [Keep apps current](/library/keep-apps-current/#automatic-publishing).
+18. On the library's page **Add an app**, add an app. See [Add an app](/library/keep-apps-current/#add-an-app).
+19. On the page **Refresh**, choose **Refresh now**. Then approve the app and sign with Greenhold Admin. See [Approve an app](/library/keep-apps-current/#approve-an-app-and-keep-it-current).
+20. Tell the agent where the library is. In this version, use the command line. See [Tell the agent where the library is](/library/install-a-package/#1-tell-the-agent-where-the-library-is).
+21. In the Manager, open **New job**, choose the package and the device, and sign. See [Install a package on a device](/library/install-a-package/).
+22. Remove the package again. See [Remove a package from a device](/library/remove-a-package/).
+
+</TabItem>
+<TabItem label="CLI">
+
+**Prepare on your own computer**
+
+1. Check what you need. See [Requirements](/get-started/requirements/).
+2. Install Greenhold Admin. It installs `greenhold-sign`. See [Greenhold Admin](/get-started/admin-tools/).
+3. Make the root with `greenhold-sign root-create`. See [Before you install](/get-started/before-you-install/).
+4. Make your key with `admin-create`, and certify it with `admin-certify`. See [Administrator keys](/get-started/administrator-keys/).
+
+**Install the server**
 
 5. Prepare PostgreSQL, the identity provider and the Manager certificate. See [Install the server](/get-started/install-the-server/#1-prepare-postgresql).
-6. Run the server installer. See [Run the installer](/get-started/install-the-server/#4-run-the-installer).
-7. Run the setup wizard and import `root.public.json`. See [Run the setup wizard](/get-started/install-the-server/#5-run-the-setup-wizard).
-8. Open the Manager and sign in once.
+6. Install the server MSI with `msiexec`. See [Run the installer](/get-started/install-the-server/#4-run-the-installer).
+7. Run `Greenhold.Setup.exe --answers`. See [Run the setup wizard](/get-started/install-the-server/#5-run-the-setup-wizard).
 
-## Enroll the first device
+**Enroll the first device**
 
-9. Install the agent with the command line from the last page of the wizard. See [Enroll your first device](/get-started/enroll-your-first-device/).
-10. Make a token on the server and enroll the device with it. See [Enroll](/get-started/enroll-your-first-device/#3-enroll).
+8. Install the agent with the command line that setup wrote. See [Enroll your first device](/get-started/enroll-your-first-device/).
+9. Make a token with `Greenhold.Gateway.exe token new`. See [Make a token](/get-started/enroll-your-first-device/#2-make-a-token).
+10. Enroll the device with `Greenhold.Agent.exe enroll`. See [Enroll](/get-started/enroll-your-first-device/#3-enroll).
 11. Write down the device ID and whether the device is a server. See [Check](/get-started/enroll-your-first-device/#4-check).
 
-## Run a script with Dispatch
+**Run a script with Dispatch**
 
-12. Find out if the Order needs two signers. A server needs two. See [Second signer and tags](/dispatch/second-signer-and-tags/).
-13. If it does, make a second administrator key. See [Make a second administrator key](/get-started/administrator-keys/#make-a-second-administrator-key).
-14. Write the script, sign a Release and an Order, store them on the gateway and read the output. See [Run a PowerShell script on a device](/dispatch/run-a-powershell-script/).
+12. Find out if the Order needs two signers. See [Second signer and tags](/dispatch/second-signer-and-tags/).
+13. Write the script, sign a Release and an Order, store them with `order add` and read the output with `run output`. See [Run a PowerShell script on a device](/dispatch/run-a-powershell-script/).
 
-## Install a package with Library
+**Install a package with Library**
 
-15. Get `greenhold-library` and create a library for your installation ID. See [Create a library and add a package](/library/create-a-library/).
-16. Pin the root, add a package, refresh, sign the draft and publish it. See [Pin the root](/library/create-a-library/#2-pin-the-root).
-17. Tell the agent where the library is. See [Tell the agent where the library is](/library/install-a-package/#1-tell-the-agent-where-the-library-is).
-18. Write the content of the Action, sign a Release and an Order, store them and read the output. See [Install a package on a device](/library/install-a-package/).
-19. Remove the package again. See [Remove a package from a device](/library/remove-a-package/).
+14. Create the library and pin the root with `greenhold-library`. See [Create a library and add a package](/library/create-a-library/).
+15. Add a package, refresh, draft, sign and publish. See [Add a package](/library/create-a-library/#3-add-a-package).
+16. Tell the agent where the library is. See [Tell the agent where the library is](/library/install-a-package/#1-tell-the-agent-where-the-library-is).
+17. Write the content with `install-spec`, sign a Release and an Order, store them and read the output. See [Install a package on a device](/library/install-a-package/).
+18. Remove the package again. See [Remove a package from a device](/library/remove-a-package/).
+
+</TabItem>
+</Tabs>
 
 ## When a step fails
 
-- An agent that refuses an Order reports a code. See [What the agent checks](/dispatch/orders-and-releases/#what-the-agent-checks).
+- An agent that refuses an Order reports a code. The Manager shows it as a sentence on the Run's page. See [What the agent checks](/dispatch/orders-and-releases/#what-the-agent-checks).
 - For other problems, see [Troubleshooting](/operate/troubleshooting/).

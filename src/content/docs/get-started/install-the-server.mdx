@@ -3,6 +3,8 @@ title: Install the server
 description: Install the gateway and the Manager, and connect them with the setup wizard.
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 You install the server in two moves.
 First, the installer puts the programs on the computer.
 Second, the setup wizard connects them.
@@ -15,6 +17,8 @@ The server installer installs these parts:
 | Manager (web console) | `GreenholdManager` | `NT SERVICE\GreenholdManager` |
 | Setup wizard | none | none |
 | Library command line (`greenhold-library`) | none | none |
+| Library refresh | `GreenholdLibraryRefresh` | `NT SERVICE\GreenholdLibraryRefresh` |
+| Library automatic publisher | `GreenholdLibraryPublisher` | `NT SERVICE\GreenholdLibraryPublisher` |
 
 ## 1. Prepare PostgreSQL
 
@@ -116,9 +120,9 @@ These steps are for Microsoft Entra ID.
 
 1. In the Entra admin center, select **App registrations**, then **New registration**.
 2. Select the platform **Web**.
-3. Set the redirect URI to `https://<manager name>:<port>/signin-oidc`.
+3. Set the redirect URI to `https://<manager hostname>:<port>/signin-oidc`. The Manager page of the setup wizard shows this address with a **Copy** button.
 4. Copy the **Directory (tenant) ID** and the **Application (client) ID**.
-5. The authority is `https://login.microsoftonline.com/<tenant id>/v2.0`.
+5. Give only the tenant ID to the setup wizard. The wizard makes the issuer address from it.
 6. Select **Certificates & secrets**, then **New client secret**. Copy the value at once. Also write down the date in the **Expires** column.
 7. Select **Token configuration**, then **Add groups claim**, then **Security groups**. Add it to the ID token.
 8. Make a security group for the Greenhold administrators. Copy its object ID.
@@ -148,12 +152,12 @@ The status page of the Manager has the card **Sign-in secret**:
 | Valid | More than 30 days before the date. |
 | Expires soon (warning) | From 30 days before the date. |
 | Expires very soon (error) | From 7 days before the date. |
-| Expired (error) | After the date. |
+| Expired (error) | On the date and after it. A secret expires at a time on its date. |
 | No date (note) | The Manager has a secret, but no date. |
 | Not a date (warning) | The setting is not in the format `yyyy-MM-dd`. |
 
 The Manager counts the days in UTC.
-It also writes a security event to the Windows Event Log: 5501 from 30 days before the date, 5502 from 7 days before the date, and 5503 after the date.
+It also writes a security event to the Windows Event Log: 5501 from 30 days before the date, 5502 from 7 days before the date, and 5503 from the date itself.
 It writes each event at most once a day.
 See [Logs and support bundles](/operate/logs-and-support-bundles/).
 
@@ -211,28 +215,125 @@ The installer does these things:
 
 ## 5. Run the setup wizard
 
-Start **Greenhold Server Setup** from the Start menu.
+The setup wizard connects the parts.
 You can run it again at any time.
 It shows what is done and changes only what you change.
 
-1. **Before you start.** The wizard checks the requirements. Each line says Ready, Note, Optional or Needed.
-2. **Database.** Select *Set it up for me* and give a PostgreSQL account that can create databases and roles. Or select *My database administrator already ran bootstrap.sql* and give the three connection files. The wizard makes a UTF8 database and three roles. It generates a password for each role. It migrates the schema. **Save bootstrap.sql** writes the script for your database administrator.
-3. **Agent gateway.** Enter the names and addresses that agents use. Enter the listen address and ports. Choose whether to add a firewall rule. See the next sections.
-4. **Installation root.** Select *Import* and give `root.public.json`. Do not give `root.key.json`.
-5. **License.** Choose **Continue without a license**, a license or trial file, or a request file. Without a license, Greenhold works for 90 days. See [Use without a license](/manager/license/#use-without-a-license).
-6. **Library.** Optional. Make the Library of this installation in a folder or a share. See [Create a library](/library/create-a-library/#with-the-setup-wizard).
-7. **Manager.** Enter the address, the authority, the client ID, the client secret, the day the secret expires, the administrator group and the certificate.
-8. **Review and apply.** The review lists every change. Nothing changes before you select Apply. Then the services start and the health page checks them.
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+Start **Greenhold Server Setup** from the Start menu.
+
+1. **Before you start.** The wizard checks this server. Each line says **Ready**, **Note**, **Optional**, **Asked later** or **Needed**.
+   - **Needed** is something to arrange outside the wizard before you continue.
+   - **Asked later** is something that a later page asks for, such as the gateway name, the identity provider, the Manager certificate and the installation root. Have it ready. There is nothing to do yet.
+
+   The wizard looks for PostgreSQL on this server. When it finds one, it fills in the server name and the port on the **Database** page and checks TLS. When it finds nothing, it shows a `winget` command to install PostgreSQL for a lab.
+
+   ![The Before you start page. Here PostgreSQL has TLS off, so the line says Needed.](../../../assets/screens/setup-before-you-start.png)
+
+2. **Database.** Choose **Set it up for me** and give the **PostgreSQL superuser** (`postgres` by default) and its password. Or choose **My database administrator did it** and give the connection files. Choose **Test connection**. The test signs in and checks TLS, `scram-sha-256`, the version and the right to make a database and roles. It changes nothing. **Next** runs the same test.
+
+   When the server's certificate is refused, the page says why in one sentence:
+
+   | The page says | What to do |
+   |---|---|
+   | The certificate is for *name*, not *other name*. Use one of those names. | Use a name that the page lists. |
+   | This server does not trust the certificate of the PostgreSQL server. | Import the certificate of the issuing CA into Trusted Root Certification Authorities on this server. Or, in a lab, use **Encrypt only**. |
+   | The certificate of the PostgreSQL server expired on *date*. | Renew the certificate on the PostgreSQL server. |
+   | The TLS connection to the PostgreSQL server failed. | Check the certificate and the log of the PostgreSQL server. |
+
+   ![The Database page when the certificate does not hold the name](../../../assets/screens/setup-database-tls.png)
+
+   The wizard makes the database and the roles. It makes a random password for each role and keeps it in a protected file. Nobody needs to know these passwords.
+
+3. **Agent gateway.** **Gateway name (agents connect to this hostname)** is filled in with the DNS name of this server. Change it if agents use another name. Choose **Listen on**, the ports, and whether to open the two ports in Windows Firewall. See [Bind addresses](#bind-addresses).
+
+   ![The Agent gateway page](../../../assets/screens/setup-agent-gateway.png)
+
+4. **Installation root.** Choose **Import a root made on an admin computer** and give `root.public.json`. Do not give `root.key.json`. See [The Installation root page](#the-installation-root-page).
+5. **License.** Choose **Install a license or trial file**, **Continue without a license**, or **Need a license? Write a request file**. When you choose a file, the page checks it at once. A valid file shows one line, for example "Valid for this installation. 25 devices. Dispatch and Library." A file that is not valid shows why, and **Save license request** writes a request file for your supplier.
+
+   ![The License page](../../../assets/screens/setup-license.png)
+
+6. **Library.** Optional. Choose **Make a Library for this installation** and give a folder or a share. The wizard makes the library, pins the root, connects the library to the Manager, gives it to the refresh service and sets up automatic publishing. See [Create a library](/library/create-a-library/).
+
+   ![The Library page](../../../assets/screens/setup-library.png)
+
+7. **Manager.** Fill in the page from the top:
+   - **Manager hostname (people open the Manager with this name)**. The wizard fills in the gateway name. Give the name only: the wizard adds `https://` and the port. **Port** is 5443 by default. The page shows the full address.
+   - The certificate: **Use a certificate that is already on this server**, or **Make a self-signed certificate (lab only)**.
+   - Sign-in. For **Microsoft Entra ID**, type the **Tenant ID**: a GUID or a verified domain. The wizard makes the issuer address and shows it. Type the client ID, the client secret, and the **Object ID** of the administrators' group. For another OpenID Connect provider, give its full issuer address and the group value.
+   - The redirect address for the app registration, with a **Copy** button.
+   - The date that the client secret expires. The page refuses a date that is today or earlier.
+
+   ![The Manager page](../../../assets/screens/setup-manager.png)
+
+8. **Review and start.** The review lists every change in plain words. Nothing changes before you choose **Apply**. A step can say **Will change**, **Already set up**, **Skipped**, **Waits for** *step* or **Blocked**. "Waits for" is not a problem: the step runs after the step that it waits for.
+
+   ![The Review page](../../../assets/screens/setup-review.png)
+
+When you choose **Apply**, a progress bar shows each step.
+At the end, a banner shows the result:
+
+| Banner | Meaning |
+|---|---|
+| Green: "Setup is finished. Greenhold is running." | Every step is done and every check passed. |
+| Amber | Setup is finished, but a check failed. Read the checks and correct what they name. |
+| Red | A step failed. The banner names the step and what to do. **Back** and **Apply** work again. Steps that are done stay done. |
+
+![An amber result banner, with the checks under it](../../../assets/screens/setup-result.png)
+
+Each banner ends with the path of the setup log.
+The page has **Open the Manager** with its address, and the next step: enroll your first device.
+
+After the wizard, open the Manager and sign in one time.
+This proves that the identity provider works.
+
+</TabItem>
+<TabItem label="CLI">
+
+Run the same steps without a window, in an elevated prompt:
+
+```
+Greenhold.Setup.exe --answers C:\path\answers.json --plan
+Greenhold.Setup.exe --answers C:\path\answers.json
+```
+
+`--plan` shows what would change and changes nothing.
+The answers file holds names, addresses and paths, and **never a secret**.
+A password or a passphrase comes from a file (`AdminPasswordFile`, `RootPassphraseFile`, `AdminPassphraseFile`, `ClientSecretFile`) or from an environment variable.
+Each such file must be readable only by you, Administrators and SYSTEM.
+
+```json
+{
+  "Database": { "Host": "db.example.com", "DatabaseName": "greenhold", "AdminUser": "postgres", "AdminPasswordFile": "C:\\secure\\pg-admin.txt" },
+  "Gateway": { "Dns": [ "gateway.example.com" ], "AcceptLicense": true, "OpenFirewall": false },
+  "Root": { "Mode": "Import", "RootPublicFile": "C:\\secure\\root.public.json" },
+  "License": { "Mode": "Skip" },
+  "Library": { "Mode": "Create", "Path": "D:\\Library", "Name": "Library" },
+  "Manager": {
+    "Url": "https://greenhold.example.com:5443", "Authority": "https://login.microsoftonline.com/<tenant>/v2.0", "ClientId": "<client id>",
+    "ClientSecretFile": "C:\\secure\\client-secret.txt", "ClientSecretExpires": "2027-10-24", "AdminGroup": "<group id>",
+    "CertificateMode": "Store", "CertificateSubject": "CN=greenhold.example.com"
+  }
+}
+```
+
+Exit codes: 0 done, 1 refused or failed (the text says why), 2 a wrong command line, 3 not elevated.
+After a finished run, the command prints the checks and writes the agent installer's command line to `%ProgramData%\Greenhold\Setup\Install-GreenholdAgent.cmd`.
+The log is `%ProgramData%\Greenhold\Setup\setup.log`.
+
+</TabItem>
+</Tabs>
 
 :::caution
 The wizard can make the root on the server for a small environment.
 Then anyone who takes over the server can sign Orders until the private keys leave it.
-Prefer to make the root on an administrator computer.
+Prefer to make the root on your own computer with Greenhold Admin.
 :::
 
 ### The Installation root page
-
-The page has three choices:
 
 | Choice | Use |
 |---|---|
@@ -240,47 +341,25 @@ The page has three choices:
 | **Make the root on this server** | For a lab or a small installation. The wizard makes the root and the first administrator key. |
 | **Later** | Agents run nothing until there is a root. |
 
-**How to make a root on an admin computer** shows the `greenhold-sign` commands.
-
 If you choose **Make the root on this server**, give these items:
 
-- The folder with `greenhold-sign.exe`.
-- The ID and the name of the first administrator. Use a pseudonym and a role.
+- The ID and the name of the first administrator. Use a role, not the name of a person.
 - A passphrase for the root and a passphrase for the administrator key. Each has at least 10 characters.
 - A folder on removable media, such as a USB drive.
 
 The wizard copies the private keys to the removable media, checks the copies and deletes the keys from the server.
 Keep the media offline.
-You need the administrator key from the media to sign.
+The key that the wizard makes is a software key.
+The agents accept it only when their policy allows software keys.
 
 If you have a license, import the root that the license is for.
 A license works only for its installation ID.
-Do not make a new root.
 
 The wizard keeps the public file on the server in this place:
 
 ```
 C:\ProgramData\Greenhold\Gateway\root.public.json
 ```
-
-The `installationId` in this file is your installation ID.
-
-### The License page
-
-| Choice | Result |
-|---|---|
-| **Continue without a license** | 5 devices can enroll. All functions work. |
-| **Install a license or trial file** | Choose the file. A license is for the installation ID of the root. |
-| **Need a license? Write a request file** | The wizard writes the file when you apply. Send it to your supplier. |
-
-To see the license after the wizard, run this on the server:
-
-```powershell
-& 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' license show
-```
-
-After the wizard finishes, open the Manager and sign in once.
-This proves that the identity provider works.
 
 ### Bind addresses
 
@@ -322,7 +401,7 @@ Limit it to the subnets of your agents.
 To add the rule yourself:
 
 ```powershell
-New-NetFirewallRule -DisplayName 'Greenhold Agent Gateway' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8443,8444 -Program 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' -RemoteAddress 10.20.0.0/16
+New-NetFirewallRule -DisplayName 'Greenhold Agent Gateway' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8443,8444 -Program 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' -RemoteAddress <agent subnets>
 ```
 
 :::note
