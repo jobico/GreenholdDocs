@@ -74,8 +74,11 @@ It holds no personal data and no secret.
 <TabItem label="GUI">
 
 1. In the Manager, open **License**.
-2. Under **Ask for a license**, choose **Save the license request**.
-3. Send the file to your supplier.
+2. Under **Ask for a license**, choose the **Products**, the **Kind** (**A license** or **A trial**) and the **Number of devices**.
+3. Choose **Save the license request**. The file holds the installation's ID, the root's key ID, the products and the number of devices. It holds no personal data and no secret.
+4. Send the file to your supplier.
+
+![The License page: Install a license and Ask for a license](../../../assets/screens/manager-license.png)
 
 Greenhold Admin and the setup wizard make the same file.
 See [Greenhold Admin](/get-started/admin-tools/#request-a-license).
@@ -138,9 +141,9 @@ You must be an Administrator in the Manager.
 
 1. In the Manager, open **License**.
 2. Under **Clock mark**, choose **Reset the clock mark**. The Manager offers this only when the mark stops new work.
-3. Read **Before you reset** and confirm.
+3. Read **Before you reset** and choose **Reset the clock mark**. **Cancel** goes back to the License page.
 
-The database refuses the reset when its clock and the clock of the Manager's server differ by more than 3 days.
+The database refuses the reset when its clock and the clock of the Manager's server differ by more than 3 days, and when the mark stops nothing.
 The audit trail and the security log record who reset the mark, and the times before and after.
 
 </TabItem>

@@ -34,7 +34,7 @@ These tasks use a signing request:
 1. Start the task in the Manager. The Manager shows the page **Sign with Greenhold Admin**.
 2. Read **The request**: what it asks for, who asked, when it was made and when it lapses.
 3. Choose **Sign with Greenhold Admin**. Your browser asks to open Greenhold Admin. Allow it.
-4. **The first time** a Manager sends you a link, Greenhold Admin shows the Manager's address. Choose **Trust this Manager and continue** only if it is your installation's Manager, at the address you always use. Greenhold Admin remembers your choice.
+4. **The first time** a Manager sends you a link, Greenhold Admin shows the Manager's address. Choose **Trust this Manager and continue** only if it is your installation's Manager, at the address you always use. Greenhold Admin remembers your choice. Otherwise choose **Do not trust it**: Greenhold Admin fetches nothing.
 5. Greenhold Admin shows **What you sign**. Read all of it. See [What you see before you sign](#what-you-see-before-you-sign).
 6. Choose your key. A key in the TPM or on a security key asks for its PIN. A key file asks for its passphrase.
 7. Choose **Sign and send to the Manager**.
@@ -111,8 +111,13 @@ For this reason, Greenhold Admin and the Manager read a script as Windows PowerS
 - A script without a BOM is accepted only when it has plain ASCII characters only.
 - Any other script is refused. The message starts with "This script has characters that Windows PowerShell may read differently".
 
+The Manager puts a UTF-8 BOM in front of every script without a BOM that you upload or paste, and keeps it so.
+Thus a pasted script, and a file saved as UTF-8, are accepted.
+A file saved in an ANSI code page, with characters other than plain ASCII, is refused.
 To correct a refused script, save it as **UTF-8 with BOM**.
-The Manager keeps every script that you upload or paste with a UTF-8 BOM.
+
+On the command line, `greenhold-sign` adds no BOM.
+Save a script with characters other than plain ASCII as **UTF-8 with BOM** before you sign it.
 
 ## Sign without the link
 

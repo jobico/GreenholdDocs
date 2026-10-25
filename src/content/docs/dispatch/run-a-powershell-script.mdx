@@ -52,7 +52,7 @@ To read the installation ID in PowerShell:
 
 1. In the Manager, open **New job**.
 2. Type a **Name of the job**, for example `Restart the print spooler`. The name is not signed.
-3. Under **1. What**, choose **Runs a PowerShell script**. Choose the **Script file**, or paste the script in **Or paste the script**. A script has at most 1 MiB. Do not put secrets in a script: every administrator who can read the job can read it. A script with characters other than plain ASCII must be saved as UTF-8 with BOM. See [The encoding rule](/manager/sign-with-greenhold-admin/#the-encoding-rule).
+3. Under **1. What**, choose **Runs a PowerShell script**. Choose the **Script file**, or paste the script in **Or paste the script**. A script has at most 1 MiB. Do not put secrets in a script: every administrator who can read the job can read it. A script with characters other than plain ASCII must be UTF-8. The Manager adds the BOM. A file in an ANSI code page with such characters is refused. See [The encoding rule](/manager/sign-with-greenhold-admin/#the-encoding-rule).
 4. Under **2. Where**, tick the **Devices**. Or choose **Or every device with this tag**. The tag adds the devices that report it now. A device that gets the tag later does not get this job.
 5. Under **3. When**, set the **Start (UTC)** and the **End (UTC)**. The end is at most 30 days after the start. A device that has not started the job by the end does not run it. The device's own run timeout stops a step that runs too long.
 6. Under **4. Signatures**, tick **Ask a second administrator to sign in any case** if you want two signers. The Manager also asks for a second signer when the agents' rules need one. See [When you need two signers](#when-you-need-two-signers).
@@ -63,7 +63,7 @@ To read the installation ID in PowerShell:
 ![The New job page, part 1](../../../assets/screens/manager-new-job.png)
 
 When the job has every signature that it needs, the Manager sends it to the gateway.
-If the Manager cannot send it, for example because of the license, the job stays **signed, not sent** with a **Send** button.
+If the Manager cannot send it, for example because of the license, the job stays **Signed, not sent** with a **Send it** button.
 
 The Manager checks each signature against the installation root before it keeps it.
 Each device checks the signatures again before it runs anything.
@@ -90,6 +90,7 @@ Write-Output "Hello $Name from $env:COMPUTERNAME"
 ```
 
 Save it as `hello.ps1`.
+A script with characters other than plain ASCII must be saved as UTF-8 with BOM: `greenhold-sign` adds no BOM. See [The encoding rule](/manager/sign-with-greenhold-admin/#the-encoding-rule).
 
 :::caution
 A parameter value is visible on the command line of the process.
@@ -251,12 +252,22 @@ This can take a few minutes.
 | Draft | The job is made. Nobody signed it yet. |
 | Waiting for signature | The job waits for the first administrator. |
 | Waiting for a second administrator | The Order needs a second signer. |
-| Signed, not sent | Every signature is there. Choose **Send**. |
-| Sent | The gateway has the job. The devices hear of it at their next look. |
-| Running | Devices run the job. |
-| Done | Every Run finished. |
-| Failed | A Run failed or was refused. |
-| Cancelled | An administrator chose **Cancel this job**. |
+| Signed, not sent | Every signature is there, but sending failed. Choose **Send it** again. |
+| Sent | The devices get the job the next time they connect. |
+| Running | Some devices have started the job. |
+| Done | Every device ran the job, and it succeeded on each. |
+| Failed | The job did not succeed on every device. |
+| Cancelled | An administrator chose **Cancel this job** before it was sent. |
+
+| Run state | Meaning |
+|---|---|
+| Waiting for the device | The device gets the job the next time it connects. |
+| Running | The device started it. |
+| Succeeded | Every step exited with 0. |
+| Failed | A step failed, took too long or wrote too much. |
+| Refused by the device | The device did not run it. The page says why. |
+| Expired | The job's end came before the device ran it. |
+| Cancelled | The job was cancelled. |
 
 ![The page of a Run](../../../assets/screens/manager-job-run.png)
 

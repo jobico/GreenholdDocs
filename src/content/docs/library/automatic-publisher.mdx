@@ -47,7 +47,13 @@ If not, readers stop to accept automatic publications.
 
 ## Set it up
 
-Do these steps on the refresh computer, in an elevated prompt.
+On the Greenhold server, the setup wizard's Library step does this for you.
+It makes the key, pins the root and gives the library to the service Greenhold Library Publisher (`GreenholdLibraryPublisher`).
+The service runs after each refresh, and at least once a day.
+Its result shows the first 16 characters of the key ID.
+The root holder then certifies the key on the Manager's page **Automatic publishing**. See [Keep apps current](/library/keep-apps-current/#automatic-publishing).
+
+On another refresh computer, do these steps in an elevated prompt.
 
 Use **another account** than the account of the refresh.
 The refresh runs code that it fetches.
@@ -61,7 +67,7 @@ Install the program under `%ProgramFiles%`.
    Greenhold.LibraryPublisher key-create --library <lib> --account <publisher account>
    ```
 
-2. Read the key ID to the root holder by voice or in person. Never use the server.
+2. Read the key ID to the root holder by voice or in person. Never use the server. `Greenhold.LibraryPublisher show` shows it again.
 3. The root holder certifies the request on the offline computer:
 
    ```

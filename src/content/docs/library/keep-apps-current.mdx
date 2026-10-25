@@ -74,7 +74,7 @@ A refresh never publishes.
 <TabItem label="GUI">
 
 1. Open the library's page **Refresh**.
-2. To refresh at once, choose **Refresh now**. The refresh service starts within a few minutes. A refresh that you ask for checks every package again.
+2. To refresh at once, choose **Refresh now**. The refresh service starts the refresh within 5 minutes. A scheduled task starts it within 15 minutes. A refresh that somebody asks for starts at the earliest one hour after the last refresh started. A refresh that you ask for checks every package again.
 3. Under **When**, choose one:
    - **Every day at a time**. Set the **Time of day**. The time is on the clock of the computer that refreshes the library. The default is 02:00.
    - **Only when somebody asks for it here**.
@@ -169,8 +169,8 @@ An administrator must publish at least one time in each period.
 
 1. Open the library's page **Automatic publishing**. **The publisher's key** shows its state.
 2. Choose **Certify the key with Greenhold Admin**.
-3. In Greenhold Admin, compare the key ID with the key ID that the setup wizard showed in its result. Confirm that they are the same.
-4. Sign with the root.
+3. In Greenhold Admin, read what you certify. In **Key id from the setup wizard**, type the first 16 characters of the key ID that the setup wizard showed on the server. The wizard shows them in four groups of four, for example `0123 4567 89ab cdef`. Spaces do not matter. Get them from the server by voice or in person. Do not copy them from the Manager or from Greenhold Admin. On the server, `Greenhold.LibraryPublisher.exe show` shows them again.
+4. Choose **Sign with the root and send to the Manager**. Greenhold Admin signs only when the characters that you typed are the same as the key ID in the request.
 
 The Manager checks the certificate against the root and stores it in the library.
 The publisher then runs after each refresh, and at least one time each day.

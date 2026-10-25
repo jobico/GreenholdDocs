@@ -232,7 +232,7 @@ Start **Greenhold Server Setup** from the Start menu.
 
    ![The Before you start page. Here PostgreSQL has TLS off, so the line says Needed.](../../../assets/screens/setup-before-you-start.png)
 
-2. **Database.** Choose **Set it up for me** and give the **PostgreSQL superuser** (`postgres` by default) and its password. Or choose **My database administrator did it** and give the connection files. Choose **Test connection**. The test signs in and checks TLS, `scram-sha-256`, the version and the right to make a database and roles. It changes nothing. **Next** runs the same test.
+2. **Database.** Choose **Set it up for me** and give the **PostgreSQL superuser** (`postgres` by default) and its password. Or choose **My database administrator did it** and give a file with the connection string of each role: `gh_migrator`, `gh_runtime`, `gh_reader`, `gh_issuer` and, optionally, `gh_operator`. Choose **Test connection**. The test signs in and checks TLS, `scram-sha-256`, the version and the right to make a database and roles. It changes nothing. **Next** runs the same test.
 
    When the server's certificate is refused, the page says why in one sentence:
 
@@ -267,7 +267,7 @@ Start **Greenhold Server Setup** from the Start menu.
    - The redirect address for the app registration, with a **Copy** button.
    - The date that the client secret expires. The page refuses a date that is today or earlier.
 
-   ![The Manager page](../../../assets/screens/setup-manager.png)
+   ![The Manager page. The Port here is 5001 from an earlier answer. The default is 5443.](../../../assets/screens/setup-manager.png)
 
 8. **Review and start.** The review lists every change in plain words. Nothing changes before you choose **Apply**. A step can say **Will change**, **Already set up**, **Skipped**, **Waits for** *step* or **Blocked**. "Waits for" is not a problem: the step runs after the step that it waits for.
 
@@ -282,7 +282,7 @@ At the end, a banner shows the result:
 | Amber | Setup is finished, but a check failed. Read the checks and correct what they name. |
 | Red | A step failed. The banner names the step and what to do. **Back** and **Apply** work again. Steps that are done stay done. |
 
-![An amber result banner, with the checks under it](../../../assets/screens/setup-result.png)
+![An amber result banner, with the checks under it. The banner also names the setup log.](../../../assets/screens/setup-result.png)
 
 Each banner ends with the path of the setup log.
 The page has **Open the Manager** with its address, and the next step: enroll your first device.
