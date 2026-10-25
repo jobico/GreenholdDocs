@@ -43,12 +43,30 @@ They are your files.
 
 ## The steps
 
-The **Home** page shows the steps in order:
+The **Home** page starts with **Needs you**: one box for each thing that waits for you, with one button.
+For example: a root folder that other accounts can change, or a key that expires soon.
+When nothing waits for you, it says **Nothing needs you.**
+
+Then it shows the steps in order:
 
 1. Make the installation root.
 2. Request a license.
 3. Make your administrator key. See [Administrator keys](/get-started/administrator-keys/).
 4. Install the server. Copy `root.public.json` to the server. The setup wizard imports it.
+
+A step shows **Done** when Greenhold Admin can see that it is done:
+
+- The root and a certified key are in your folders.
+- The license: the Manager that you trust for signing says that the license is valid.
+  Greenhold Admin gets this from the Manager when you sign something for it for the first time.
+- The server: that Manager answered.
+
+For a step that Greenhold Admin cannot check, tick **I did this step**. Clear the tick to take it back.
+The button of a step that is done is **Open**.
+
+You can paste into a passphrase or PIN box, for example from a password manager.
+Use Ctrl+V, Shift+Insert, or **Paste** on the right-click menu.
+The box stays masked.
 
 ## Make the installation root
 
