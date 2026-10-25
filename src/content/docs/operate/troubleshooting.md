@@ -87,7 +87,7 @@ netsh advfirewall firewall show rule name="Greenhold Agent Gateway"
 - The installer opens no port. Add a rule for the gateway program on ports 8443 and 8444:
 
   ```powershell
-  New-NetFirewallRule -DisplayName 'Greenhold Agent Gateway' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8443,8444 -Program 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' -RemoteAddress 10.20.0.0/16
+  New-NetFirewallRule -DisplayName 'Greenhold Agent Gateway' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8443,8444 -Program 'C:\Program Files\Greenhold\Gateway\Greenhold.Gateway.exe' -RemoteAddress <agent subnets>
   ```
 
 - An agent behind NAT arrives with the address of the NAT router. Put the router address in `-RemoteAddress`. Do not put the subnet of the agent there.
@@ -259,7 +259,7 @@ A clone of an unsealed image is refused.
 
 **Cause.** The policy of the agent does not accept the kind of the signing key.
 By default, an agent accepts only hardware-backed keys.
-A key from Admin Tools or `greenhold-sign admin-create` is a software key.
+A key file from Greenhold Admin or `greenhold-sign admin-create` is a software key. A key in the TPM or on a security key is not.
 
 **Fix.** For a lab, add `software` to `AcceptedKeyKinds`.
 See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
@@ -273,7 +273,7 @@ The message says that the free period is over.
 
 **Cause.** No license is installed, and the 90 days without a license are over.
 
-**Fix.** Request a license with Admin Tools or the setup wizard.
+**Fix.** Request a license with Greenhold Admin, the setup wizard or the License page of the Manager.
 Install it on the server with `Greenhold.Gateway.exe license install`, or in the setup wizard.
 Import it in a library with `greenhold-library license-import --library <location> --file <license>`.
 A license restores all functions at once.

@@ -16,6 +16,7 @@ Each item says who can supply it.
 | Ports | Port 8443 for the agent channel. Port 8444 for enrollment. A port for the Manager (the web console). |
 | An identity provider app | The Manager uses it for sign-in. See [Install the server](/get-started/install-the-server/). |
 | A certificate for the Manager | Browsers must trust it. Your own certificate authority can issue it. |
+| A computer for each administrator | Greenhold Admin runs there, not on the server. Use a computer with a TPM, or a PIV security key such as a YubiKey, for the administrator keys. |
 
 :::note
 You do not need .NET on any computer.
@@ -50,7 +51,7 @@ See [Install the server](/get-started/install-the-server/).
 The setup needs one of these:
 
 - A PostgreSQL account that can create a database and roles.
-- Three connection strings from your database administrator, who has run the bootstrap script.
+- The connection strings from your database administrator, who has run the bootstrap script.
 
 The setup uses the first account for one run only.
 It does not save the password.

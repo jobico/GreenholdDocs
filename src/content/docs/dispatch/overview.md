@@ -30,7 +30,7 @@ Dispatch can install packages from a library.
 The server cannot sign.
 A key that the server can use is not an approver.
 
-[Admin Tools](/get-started/admin-tools/) makes the root and the administrator keys.
+[Greenhold Admin](/get-started/admin-tools/) makes the root and the administrator keys, and signs what the Manager asks for.
 `greenhold-sign` signs Releases and Orders.
 
 ## The flow

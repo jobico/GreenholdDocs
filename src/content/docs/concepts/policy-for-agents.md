@@ -105,7 +105,7 @@ An agent without `AcceptedKeyKinds` and `AllowTagRelaxation` uses the strict def
 - A signed amendment cannot relax the tag rule.
 
 The agent refuses an Order that is signed with a software key.
-The administrator key that Admin Tools, `greenhold-sign admin-create` or the setup wizard makes is a software key.
+A key file from Greenhold Admin, a key from `greenhold-sign admin-create` without `--store tpm` or `--store smartcard`, and the key that the setup wizard makes are software keys.
 
 A software key is a file in the profile of the administrator.
 Malware on that computer can use it to sign Orders.

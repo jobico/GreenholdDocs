@@ -23,7 +23,7 @@ The program is in `C:\Program Files\Greenhold\Gateway`.
 
 | Command | Job |
 |---|---|
-| `token new --name <machine> [--lifetime <d.hh:mm:ss>]` | Make a one-time enrollment token. `--name` is required. The token is shown once. It lasts at most 7 days. |
+| `token new --name <name> \| --pattern <pattern> [--uses <n>] [--lifetime <d.hh:mm:ss>]` | Make an enrollment token, for one name or for the devices whose names match a pattern. `--uses` is the number of devices for a pattern, 1 to 1000. The token is shown once. It lasts at most 7 days. The Manager's **Add devices** page does the same. |
 | `agent list [--wide] [--json]` | List the devices and their connection state. `--wide` prints whole values. `--json` is for scripts. |
 | `agent show <device id>` | Show one device, its session and what its agent reported. It prints a warning for each policy value that is weaker than the recommended one. Four or more characters of the ID are enough. |
 | `agent revoke <device id>` | Revoke a device. You need the whole ID. You cannot undo it. The computer must enroll again as a new device. |
@@ -104,7 +104,7 @@ Only one agent process can run at a time.
 
 | Command | Job |
 |---|---|
-| `enroll [--token-file <file>]` | Enroll with a token. Without the option, it reads the token from standard input. Use standard input. |
+| `enroll [--token-file <file>]` | Enroll with a token. Without the option, it asks for the token and does not show what you type. It also reads the token from standard input. It refuses a token as an argument. |
 | `status` | Show the policy, the enrollment, the key, the certificate end and the service. |
 | `run` | Run the agent in the console. Press Ctrl+C to stop. |
 | `install` | Install the Windows service. It does not start it. |
@@ -129,7 +129,7 @@ Get-Content token.txt | & "C:\Program Files\Greenhold\Agent\Greenhold.Agent.exe"
 
 ## greenhold-sign
 
-`greenhold-sign` is in `C:\Program Files\Greenhold\Admin Tools\greenhold-sign` when Admin Tools is installed.
+`greenhold-sign` is in `C:\Program Files\Greenhold\Admin Tools\greenhold-sign` when Greenhold Admin is installed.
 It is also in the `Greenhold.SigningTool` folder of the release.
 Run it on the own computer of an administrator.
 Never run it on the server.
@@ -150,9 +150,11 @@ The tool never takes a passphrase as an argument.
 
 | Command | Job |
 |---|---|
-| `root-create --installation <id> --out <dir>` | Make the root key (`root.key.json`, keep it offline) and the public file (`root.public.json`). It prints the Policy value for the agent policy. |
-| `admin-create --admin-id <id> --name <name> --out <dir>` | Make an administrator key and a request. Use a pseudonym or a role name. It prints the key ID. Read the key ID to the holder of the root in person or by voice. |
-| `admin-certify --root <file> --request <file> --kind <kind> --out <file> [--months 1-6] [--yes]` | Certify an administrator key with the root. A certificate lasts at most 6 months. Compare the key ID with the one that the administrator read to you. |
+| `root-create --installation <id> --out <dir> [--store tpm\|smartcard]` | Make the root: a key file (`root.key.json`, keep it offline) or a key in the TPM or on a security key, and the public file (`root.public.json`). The installation ID must be a GUID. `--store software` is refused. |
+| `admin-create --admin-id <id> --name <name> --out <dir> [--store tpm\|smartcard\|software]` | Make an administrator key and a request. With `--store tpm` or `smartcard`, the request holds the proof of where the key is. `software` is for tests: nothing asks before it signs. Use a role name. It prints the key ID. Read the key ID to the root holder in person or by voice. |
+| `admin-certify --root <file> \| --cert-thumbprint <thumbprint> --request <file> --out <file> [--months 1-6] [--attestation-roots <folder>] [--yes]` | Certify an administrator key with the root. The kind is the kind that the proof shows. A certificate lasts at most 6 months. Compare the key ID with the one that the administrator reads aloud. |
+| `admin-unseal --sealed <file> --out <file>` | Open the sealed certificate of a TPM key on the computer of that TPM. |
+| `store-list` | List the Greenhold keys in your certificate store. |
 | `automation-certify --root <file> --request <file> --library-id <id> --protection tpm\|software --out <file> [--months 1-6]` | Certify the automation key of one library. |
 | `key-id --cert <file> [--alg sha384]` | Show the IDs of a certificate and its keys. |
 | `revoke --root <file> --key-id <id>[,<id>] --out <file> [--previous <file>]` | Write a revocation list. A list is cumulative. Its sequence rises. |
@@ -221,7 +223,8 @@ Run `greenhold-library --help` for all commands.
 | `refresh --library <location>` | Check the sources, store candidates and write a draft. It never publishes. |
 | `draft --library <location> [--ready]` | Write the next draft and print the line to sign it. `--ready` adds the candidates whose cool-off time is over. |
 | `publish --library <location> --file <signed file>` | Publish a signed publication. |
-| `schedule --library <location> --at <time> --account <account>` | Register the daily refresh in Task Scheduler. |
+| `schedule --library <location> --service [--at <time>]` | Give the library to the refresh service on this server. Run it elevated. |
+| `schedule --library <location> --at <time> --account <account>` | Register the refresh as a task in Task Scheduler, as an account that you choose. |
 | `issue-read-access --library <address> <writer options> --out <file> [--valid-days 1-7]` | Write a read access for Library Installers on masters. |
 | `publish-library-installer --library <location>` | Put the Library Installer set in the library. |
 | `event-source create` | Register the event source `Greenhold Library`. |
