@@ -26,10 +26,25 @@ The root also gives your **installation ID**, a GUID.
 You cannot change the ID later.
 A license is made for one installation ID.
 
+First, protect the folder for the root.
+A folder directly under the root of a drive, such as `C:\GreenholdRoot`, gets **Authenticated Users: Modify** from the drive.
+Greenhold Admin refuses such a folder.
+Run this one time, in PowerShell as an administrator.
+Change the path to your root folder:
+
+```powershell
+New-Item -ItemType Directory C:\GreenholdRoot -Force | Out-Null
+icacls C:\GreenholdRoot /inheritance:r /grant:r "*S-1-5-32-544:(OI)(CI)F" "*S-1-5-18:(OI)(CI)F" "${env:USERDOMAIN}\${env:USERNAME}:(OI)(CI)F"
+```
+
+The command gives full control to Administrators, SYSTEM and you, and to nobody else.
+See [Protect the root's folder](/get-started/administrator-keys/#protect-the-roots-folder).
+
 <Tabs syncKey="interface">
 <TabItem label="GUI">
 
 In Greenhold Admin, open **Installation root** and make the root.
+Choose the folder that you protected.
 See [Make the installation root](/get-started/admin-tools/#make-the-installation-root).
 
 </TabItem>
@@ -37,8 +52,10 @@ See [Make the installation root](/get-started/admin-tools/#make-the-installation
 
 ```powershell
 $id = [guid]::NewGuid().ToString()
-greenhold-sign root-create --installation $id --out <root folder>
+greenhold-sign root-create --installation $id --out C:\GreenholdRoot
 ```
+
+Use the folder that you protected.
 
 Add `--store tpm` or `--store smartcard` to keep the root in the TPM or on a security key.
 The command prints the key ID of the root and the policy value for the agents.

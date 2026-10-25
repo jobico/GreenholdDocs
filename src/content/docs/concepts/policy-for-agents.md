@@ -63,7 +63,7 @@ Use this for a test computer.
 | `POLICYCHANNELAUTHORITY` | `ChannelAuthority` |
 | `POLICYINSTALLATIONROOT` | `InstallationRootPublicKey` |
 | `POLICYINSTALLATIONID` | `InstallationId` |
-| `POLICYACCEPTEDKEYKINDS` | `AcceptedKeyKinds`, as a list with commas |
+| `POLICYACCEPTEDKEYKINDS` | `AcceptedKeyKinds`, as a list with commas. It replaces the whole list. |
 | `POLICYALLOWTAGRELAXATION` | `AllowTagRelaxation`: `1` or `0` |
 
 The installer remembers the values that you give.
@@ -119,6 +119,12 @@ To relax the defaults for a lab, do one of these steps:
   ```
   POLICYACCEPTEDKEYKINDS="software,windows-hello,passkey,security-key,vault"
   ```
+
+  The value replaces the whole list. It does not add `software` to the defaults.
+  Give every kind that you accept.
+  In version 0.1.4, a TPM key is `windows-hello`.
+  With `POLICYACCEPTEDKEYKINDS="software"` alone, the agent refuses an Order that a TPM key signed.
+  The installer remembers the value for later upgrades.
 
   Add `POLICYALLOWTAGRELAXATION=1` only if you use signed amendments that relax the tag rule.
 - Set the policy **Accepted signing key kinds** with Group Policy or Intune. Type one kind on each line, and include `software`.

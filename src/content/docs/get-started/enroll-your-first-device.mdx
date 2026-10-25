@@ -37,10 +37,22 @@ For a lab, add this property to the command:
 POLICYACCEPTEDKEYKINDS="software,windows-hello,passkey,security-key,vault"
 ```
 
+The value replaces the whole list. It does not add to the defaults.
+Give every kind that you accept.
+In version 0.1.4, a TPM key is `windows-hello`.
+With `software` alone, the agent refuses an Order that a TPM key signed.
+
 The wizard adds it when you tick **My administrator's key is a software key (a lab)**.
 Do not use software keys in production.
 See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
 :::
+
+The installer starts the agent only when you add `STARTSERVICES=1` to the command.
+Otherwise, start it after the install:
+
+```powershell
+Start-Service GreenholdAgent
+```
 
 To get the authority certificate as base64, run this on the server:
 
@@ -77,8 +89,8 @@ For many devices, see [Add devices](/manager/add-devices/).
 On the server, open an elevated PowerShell:
 
 ```powershell
-cd "C:Program FilesGreenholdGateway"
-.Greenhold.Gateway.exe token new --name PC-01 > token.txt
+cd "C:\Program Files\Greenhold\Gateway"
+.\Greenhold.Gateway.exe token new --name PC-01 > token.txt
 ```
 
 `--name` or `--pattern` is required.
@@ -94,7 +106,7 @@ Use `--lifetime` to set a shorter life, for example `--lifetime 2:00:00`.
 On the agent computer, open an elevated PowerShell and run:
 
 ```powershell
-& "C:Program FilesGreenholdAgentGreenhold.Agent.exe" enroll
+& "C:\Program Files\Greenhold\Agent\Greenhold.Agent.exe" enroll
 ```
 
 The agent asks for the token.
@@ -106,7 +118,7 @@ To enroll from a script, give the token file on standard input.
 Move the file over a protected route, and delete it after:
 
 ```powershell
-Get-Content token.txt | & "C:Program FilesGreenholdAgentGreenhold.Agent.exe" enroll
+Get-Content token.txt | & "C:\Program Files\Greenhold\Agent\Greenhold.Agent.exe" enroll
 Remove-Item token.txt
 ```
 

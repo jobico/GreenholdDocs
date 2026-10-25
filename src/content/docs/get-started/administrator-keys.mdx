@@ -79,6 +79,7 @@ Do not use email or chat.
 ## Certify a key (the root holder)
 
 Do this on the computer of the root holder, with the root.
+Before you certify a TPM key, [protect the root's folder](#protect-the-roots-folder) and [trust the TPM](#trust-a-tpm).
 
 <Tabs syncKey="interface">
 <TabItem label="GUI">
@@ -150,11 +151,52 @@ Otherwise every proof is refused.
 A FAT32 USB drive has no permissions, so its folder is refused.
 :::
 
+### Protect the root's folder
+
+The root's folder is the folder that holds `root.key.json`.
+A folder directly under the root of a drive, such as `C:\GreenholdRoot`, gets its permissions from the drive.
+These permissions include **Authenticated Users: Modify**.
+Greenhold Admin refuses such a folder, and `greenhold-sign` refuses every proof in it.
+
+Run this one time, in PowerShell as an administrator.
+Change the path to the root's folder:
+
+```powershell
+icacls C:\GreenholdRoot /inheritance:r /grant:r "*S-1-5-32-544:(OI)(CI)F" "*S-1-5-18:(OI)(CI)F" "${env:USERDOMAIN}\${env:USERNAME}:(OI)(CI)F"
+```
+
+The command removes the permissions from the drive.
+It gives full control to Administrators, SYSTEM and you.
+Do the same for a folder on an NTFS USB drive.
+
+### Trust a TPM
+
+The root certifies a TPM key only when it can prove the TPM.
+With no certificate in `attestation-roots\tpm`, the root refuses every TPM key.
+
+Put the root certificate of your TPM vendor in `attestation-roots\tpm`.
+Or trust one TPM: put that TPM's own endorsement certificate in `attestation-roots\tpm`.
+Then that one TPM is trusted, and no other.
+
+To export the endorsement certificate of this computer's TPM, run this in PowerShell as an administrator, on the computer with the TPM:
+
+```powershell
+New-Item -ItemType Directory C:\GreenholdRoot\attestation-roots\tpm -Force | Out-Null
+$ek = (Get-TpmEndorsementKeyInfo).ManufacturerCertificates | Select-Object -First 1
+[IO.File]::WriteAllBytes('C:\GreenholdRoot\attestation-roots\tpm\my-tpm.cer', $ek.RawData)
+```
+
+If `ManufacturerCertificates` is empty, the TPM has no endorsement certificate.
+Then get the root certificate from the TPM vendor.
+
+:::note[Virtual machines]
+A virtual TPM in Hyper-V has no endorsement certificate.
+The root refuses its keys: "The request holds no endorsement certificate of the TPM".
+Test TPM keys on a physical computer, or use software keys in a lab.
+:::
+
 Before you certify, the page shows the vendor certificate that the proof was checked against: its name, its file and its SHA-256 fingerprint.
 Compare the fingerprint with the vendor's.
-
-For a lab, you can put one TPM's own endorsement certificate in `tpm`.
-Then that one TPM is trusted, and no other.
 
 ## Unlock a TPM key's certificate (the administrator)
 

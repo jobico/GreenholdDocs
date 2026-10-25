@@ -198,6 +198,7 @@ Double-click `Greenhold-Server-<version>-x64.msi`.
 Read the license agreement.
 Accept it to continue.
 The last dialog offers to start the setup wizard.
+Later, start it from the Start menu: **Greenhold Server Setup**.
 
 For a silent install, run this as an administrator:
 
@@ -210,6 +211,7 @@ Use the full path to the MSI.
 The installer does these things:
 
 - It starts no service. The services need setup first.
+- It adds the services and their accounts. The two Library services exist only after the server installer of version 0.1.4 or later.
 - It opens no firewall port.
 - It makes no certificate and no database.
 
@@ -290,6 +292,23 @@ The page has **Open the Manager** with its address, and the next step: enroll yo
 After the wizard, open the Manager and sign in one time.
 This proves that the identity provider works.
 
+:::caution[Version 0.1.4: start the Library services]
+In version 0.1.4, setup does not start the two Library services.
+If you made a library, start them after setup.
+Run this in PowerShell as an administrator:
+
+```powershell
+Start-Service GreenholdLibraryRefresh, GreenholdLibraryPublisher
+```
+
+Until they run, the library does not refresh and does not publish automatically.
+A later version starts them for you.
+If `Start-Service` cannot find a service, run the server installer of version 0.1.4 and setup first.
+:::
+
+Then protect the library folder.
+See [Protect the library folder](/library/create-a-library/#protect-the-library-folder).
+
 </TabItem>
 <TabItem label="CLI">
 
@@ -323,6 +342,23 @@ Each such file must be readable only by you, Administrators and SYSTEM.
 Exit codes: 0 done, 1 refused or failed (the text says why), 2 a wrong command line, 3 not elevated.
 After a finished run, the command prints the checks and writes the agent installer's command line to `%ProgramData%\Greenhold\Setup\Install-GreenholdAgent.cmd`.
 The log is `%ProgramData%\Greenhold\Setup\setup.log`.
+
+:::caution[Version 0.1.4: start the Library services]
+In version 0.1.4, setup does not start the two Library services.
+If the answers file makes a library, start them after setup:
+
+```powershell
+Start-Service GreenholdLibraryRefresh, GreenholdLibraryPublisher
+Get-Service GreenholdLibraryRefresh, GreenholdLibraryPublisher
+```
+
+Both services must show `Running`.
+A later version starts them for you.
+If `Start-Service` cannot find a service, run the server installer of version 0.1.4 and setup first.
+:::
+
+Then protect the library folder.
+See [Protect the library folder](/library/create-a-library/#protect-the-library-folder).
 
 </TabItem>
 </Tabs>

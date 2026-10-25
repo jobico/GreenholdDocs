@@ -35,6 +35,16 @@ The wizard does these things for you:
 - It gives the refresh service the library. The service refreshes it every day at 02:00, and when somebody asks in the Manager.
 - It sets up automatic publishing. It makes the publisher's key and shows the first 16 characters of its **key ID** in its result, in four groups of four. Give them to the root holder by voice or in person, not through the Manager. The root holder certifies the key later. See [Keep apps current](/library/keep-apps-current/#automatic-publishing).
 
+In version 0.1.4, the wizard does not start the two Library services.
+Start them after the wizard, in PowerShell as an administrator:
+
+```powershell
+Start-Service GreenholdLibraryRefresh, GreenholdLibraryPublisher
+```
+
+A later version starts them for you.
+Then [protect the library folder](#protect-the-library-folder).
+
 The wizard never overwrites a library:
 
 - If the folder holds a library of this installation, the wizard only pins the root.
@@ -75,11 +85,39 @@ greenhold-library create --library \\files\library --name "Library" --installati
 
 The installation ID is `installationId` in `root.public.json`, a GUID.
 
+For a library in a local folder on the Greenhold server, [protect the library folder](#protect-the-library-folder) after `create`.
+
 </TabItem>
 </Tabs>
 
 A library on Azure Blob storage is made with `greenhold-library create`.
 See [Azure Blob libraries](/library/azure-blob/).
+
+### Protect the library folder
+
+Do this for a library in a local folder, after the wizard or `create`.
+
+A folder directly under the root of a drive, such as `D:\GreenholdLibrary`, gets its permissions from the drive.
+These permissions include **Authenticated Users: Modify**.
+Then every user who can sign in to the server can change the library.
+Publications stay signed, but such a user can delete or change files.
+
+In version 0.1.4, set the permissions yourself.
+Run this in PowerShell as an administrator.
+Change the path to your library folder:
+
+```powershell
+icacls D:\GreenholdLibrary /inheritance:r /grant:r "*S-1-5-32-544:(OI)(CI)F" "*S-1-5-18:(OI)(CI)F" "NT SERVICE\GreenholdManager:(OI)(CI)M" "NT SERVICE\GreenholdLibraryRefresh:(OI)(CI)M" "NT SERVICE\GreenholdLibraryPublisher:(OI)(CI)M"
+```
+
+The command removes the permissions from the drive.
+It gives full control to Administrators and SYSTEM.
+It lets the Manager and the two Library services change files.
+
+If `icacls` says that it cannot map an account name, the service accounts do not exist yet.
+Run the server installer of version 0.1.4 and setup first.
+
+A later version's setup checks the permissions of the folder and corrects them.
 
 ## 2. Pin the root
 
