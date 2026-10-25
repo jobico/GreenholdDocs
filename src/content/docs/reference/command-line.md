@@ -42,11 +42,14 @@ The program is in `C:\Program Files\Greenhold\Gateway`.
 | Command | Job |
 |---|---|
 | `license install --file <license> --root <root.public.json>` | Install a license. The command refuses a license for another installation. |
-| `license show` | Show the installed license, the clock and what the license allows. |
+| `license root --root <root.public.json>` | Tell the gateway which installation root this installation uses. The 90 days without a license then count from the date of the root, if that date is earlier. The setup wizard runs this command when you continue without a license. |
+| `license show` | Show the installed license, the clock and what the license allows. Without a license, it shows the days left. |
 | `license clock reset [--connection-file <path>]` | Move the license clock mark back to the clock of the database. Give the connection string of `gh_migrator`. |
 
-Enrolling a device and storing a new Order need a valid license or the starter allowance of 5 devices.
-The other commands work with any license.
+Enrolling a device and storing a new Order need a valid license or the starter allowance.
+The starter allowance is 5 devices for 90 days.
+The other commands work with any license, and after the 90 days.
+See [Use without a license](/get-started/before-you-install/#use-without-a-license).
 
 ### Audit trail
 
@@ -164,9 +167,29 @@ The tool never takes a passphrase as an argument.
 | `hash --file <signed Release> [--alg sha384]` | Show the hash that an Order names. |
 | `install-spec --library <dir> --library-id <id> --root <file> --package <id> --out <file> [--version <v> \| --follow-publication]` | Write the content of an `InstallPackage` Action from the verified publication. |
 | `verify --order <file> --release <file> --root <file> --device-id <id>` | Check an Order as an agent does. It prints `ACCEPTED` or `REFUSED` with the code. |
-| `verify-publication --publication <file> --content <file> --root <file> --library-id <id>` | Check a publication as a reader does. |
+| `verify-publication --publication <file> --content <file> --root <file> --library-id <id>` | Check a publication as a Library Installer does. |
 
-`verify` also takes these options: `--tag`, `--server`, `--accept-kinds`, `--second-signer-above`, `--no-second-signer`, `--always-second-signer`, `--forbid-tag-relaxation`, `--revocations` and `--amendment`.
+`verify` also takes these options: `--tag`, `--server`, `--accept-kinds`, `--second-signer-above`, `--no-second-signer`, `--always-second-signer`, `--forbid-tag-relaxation`, `--lab`, `--revocations` and `--amendment`.
+`verify-publication` also takes `--accept-kinds` and `--lab`.
+
+#### The defaults of verify and verify-publication
+
+`verify` and `verify-publication` use the strict defaults, as an agent or a Library Installer with no policy does:
+
+- Only signatures from hardware-backed keys count: `windows-hello`, `passkey`, `security-key` and `vault`.
+- A signed amendment cannot relax the tag rule (`verify` only).
+
+So the result is the same as on a reader with no policy.
+
+| Option | Effect |
+|---|---|
+| `--accept-kinds <kind>,<kind>` | Use these key kinds. The kinds are `software`, `windows-hello`, `passkey`, `security-key` and `vault`. This option wins over the defaults and over `--lab`. |
+| `--lab` | Use the lab values: every key kind counts, `software` too. For `verify`, a signed amendment can also relax the tag rule. |
+| `--forbid-tag-relaxation` | With `--lab`, keep the tag rule strict. Without `--lab`, it changes nothing. |
+
+Use `--lab` to check an Order or a publication for a lab agent or a lab Library Installer that accepts software keys.
+Do not use `--lab` to check work for production computers.
+For production, use the defaults, or give the same `--accept-kinds` as the policy of the readers.
 
 Run `greenhold-sign --help` for all options.
 
@@ -188,9 +211,17 @@ Run `greenhold-library --help` for all commands.
 
 | Command | Job |
 |---|---|
+<<<<<<< HEAD
 | `create --library <location> [--name <name>] [--installation <id>]` | Make a library. It prints the library ID and the installation ID. `--installation` is the `installationId` of `root.public.json`, a GUID. |
 | `pin-root --library <location> --root <root.public.json>` | Pin the installation root on this computer. |
 | `add-package --library <location> --package <id> --name <name> [--winget \| --url <address>] [--installer-type <type>]` | Add a package. `--installer-type` picks one installer type when the source offers several. |
+=======
+| `create --library <location> [--name <name>] [--installation <id>]` | Make a library. It prints the library ID and the installation ID. On the Greenhold server, it uses the installation of the root that setup holds, and says so. `--installation` names another installation. |
+| `pin-root --library <location> [--root <root.public.json>]` | Pin the installation root on this computer. On the Greenhold server, it uses the root that setup holds, and says so. On other computers, `--root` is necessary. |
+| `license --library <location>` | Show the license of the library. Without a license, it shows the days left. |
+| `license-import --library <location> --file <license>` | Import a license into the library. |
+| `add-package --library <location> --package <id> --name <name> [--winget \| --url <address>]` | Add a package. |
+>>>>>>> dev/security-batch-2-docs
 | `add-version --library <location> --package <id> --version <v> --file <file>` | Add a version by hand. It becomes a candidate. |
 | `show --library <location>` | Show the packages, their versions and their candidates. |
 | `refresh --library <location>` | Check the sources, store candidates and write a draft. It never publishes. |

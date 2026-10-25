@@ -198,15 +198,17 @@ You can also run **Greenhold Server Setup** again and apply the Manager step.
 
 1. In the Entra admin center, make a new client secret for the app registration.
 2. Write the new value in the secret file that `Manager:Identity:ClientSecretFile` names. Only administrators, SYSTEM and `NT SERVICE\GreenholdManager` can open this file.
-3. Restart the service:
+3. Write the expiry date of the new secret in `Manager:Identity:ClientSecretExpires`, as `yyyy-MM-dd`. Or run the setup wizard again and type the date on the Manager page.
+4. Restart the service:
 
    ```powershell
    Restart-Service GreenholdManager
    ```
 
 :::tip
-Write the end date of the secret in your calendar.
-Make the new secret before that date.
+With the expiry date, the Manager warns you 30 days before the date.
+See the card **Sign-in secret** on the status page, and the events 5501 to 5503.
+See [The expiry date of the secret](/get-started/install-the-server/#the-expiry-date-of-the-secret).
 :::
 
 ## The gateway does not start
@@ -250,3 +252,29 @@ Enroll the computer again:
 The computer becomes a new device.
 Always seal an image before you capture it.
 A clone of an unsealed image is refused.
+
+## The agent refuses an Order with code 14
+
+**Symptom.** `run list` shows refusal code 14 for an Order.
+
+**Cause.** The policy of the agent does not accept the kind of the signing key.
+By default, an agent accepts only hardware-backed keys.
+A key from Admin Tools or `greenhold-sign admin-create` is a software key.
+
+**Fix.** For a lab, add `software` to `AcceptedKeyKinds`.
+See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
+For production, sign with a hardware-backed key.
+
+## New work stops after 90 days
+
+**Symptom.** The gateway refuses to enroll a device or to store a new Order.
+Or `greenhold-library` refuses a new package or a publication.
+The message says that the free period is over.
+
+**Cause.** No license is installed, and the 90 days without a license are over.
+
+**Fix.** Request a license with Admin Tools or the setup wizard.
+Install it on the server with `Greenhold.Gateway.exe license install`, or in the setup wizard.
+Import it in a library with `greenhold-library license-import --library <location> --file <license>`.
+A license restores all functions at once.
+See [Use without a license](/get-started/before-you-install/#use-without-a-license).

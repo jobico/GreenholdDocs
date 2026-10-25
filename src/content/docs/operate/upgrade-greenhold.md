@@ -91,6 +91,7 @@ If you do not have it, use the wizard.
 
 2. The key, the identity and the policy stay. The device does not enroll again.
 3. If you gave the `POLICY...` properties at the first install, the installer remembers them. An upgrade without properties keeps them. A property that you give replaces that one value and keeps the others. Group Policy overrides them at its next refresh.
+4. An agent without `AcceptedKeyKinds` uses the strict defaults after the upgrade. It refuses an Order that is signed with a software key. For a lab, add `POLICYACCEPTEDKEYKINDS="software,windows-hello,passkey,security-key,vault"` to the command, or set the policy. See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
 
 To upgrade many computers, use your software distribution tool with the same command.
 A software-installation GPO needs `LICENSEACCEPTED=1` in a transform (`.mst`).

@@ -14,6 +14,7 @@ The server installer installs these parts:
 | Gateway | `GreenholdGateway` | LocalSystem |
 | Manager (web console) | `GreenholdManager` | `NT SERVICE\GreenholdManager` |
 | Setup wizard | none | none |
+| Library command line (`greenhold-library`) | none | none |
 
 ## 1. Prepare PostgreSQL
 
@@ -118,7 +119,7 @@ These steps are for Microsoft Entra ID.
 3. Set the redirect URI to `https://<manager name>:<port>/signin-oidc`.
 4. Copy the **Directory (tenant) ID** and the **Application (client) ID**.
 5. The authority is `https://login.microsoftonline.com/<tenant id>/v2.0`.
-6. Select **Certificates & secrets**, then **New client secret**. Copy the value at once.
+6. Select **Certificates & secrets**, then **New client secret**. Copy the value at once. Also write down the date in the **Expires** column.
 7. Select **Token configuration**, then **Add groups claim**, then **Security groups**. Add it to the ID token.
 8. Make a security group for the Greenhold administrators. Copy its object ID.
 
@@ -128,9 +129,36 @@ Other people who sign in see the page "No access".
 
 :::note
 The client secret expires.
-Make a new secret before the date.
 After the date, nobody can sign in.
+Make a new secret before the date.
 :::
+
+### The expiry date of the secret
+
+The Manager cannot ask Entra when the secret expires.
+Give the date to the Manager, and it warns you before the date.
+
+- In the setup wizard, type the date in **Secret expires (yyyy-MM-dd)** on the Manager page.
+- Or set `Manager:Identity:ClientSecretExpires` in `%ProgramData%\Greenhold\Manager.appsettings.json`, for example `"2027-10-23"`. Restart `GreenholdManager`.
+
+The status page of the Manager has the card **Sign-in secret**:
+
+| State | When |
+|---|---|
+| Valid | More than 30 days before the date. |
+| Expires soon (warning) | From 30 days before the date. |
+| Expires very soon (error) | From 7 days before the date. |
+| Expired (error) | After the date. |
+| No date (note) | The Manager has a secret, but no date. |
+| Not a date (warning) | The setting is not in the format `yyyy-MM-dd`. |
+
+The Manager counts the days in UTC.
+It also writes a security event to the Windows Event Log: 5501 from 30 days before the date, 5502 from 7 days before the date, and 5503 after the date.
+It writes each event at most once a day.
+See [Logs and support bundles](/operate/logs-and-support-bundles/).
+
+When you make a new secret, also change the date.
+See [The client secret expired](/operate/troubleshooting/#the-client-secret-expired).
 
 ## 3. Get the Manager certificate
 
@@ -191,9 +219,10 @@ It shows what is done and changes only what you change.
 2. **Database.** Select *Set it up for me* and give a PostgreSQL account that can create databases and roles. Or select *My database administrator already ran bootstrap.sql* and give the three connection files. The wizard makes a UTF8 database and three roles. It generates a password for each role. It migrates the schema. **Save bootstrap.sql** writes the script for your database administrator.
 3. **Agent gateway.** Enter the names and addresses that agents use. Enter the listen address and ports. Choose whether to add a firewall rule. See the next sections.
 4. **Installation root.** Select *Import* and give `root.public.json`. Do not give `root.key.json`.
-5. **License.** Choose none, a license file, or a request file.
-6. **Manager.** Enter the address, the authority, the client ID, the client secret, the administrator group and the certificate.
-7. **Review and apply.** The review lists every change. Nothing changes before you select Apply. Then the services start and the health page checks them.
+5. **License.** Choose **Continue without a license**, a license or trial file, or a request file. Without a license, Greenhold works for 90 days. See [Use without a license](/get-started/before-you-install/#use-without-a-license).
+6. **Library.** Optional. Make the Library of this installation in a folder or a share. See [Create a library](/library/create-a-library/#with-the-setup-wizard).
+7. **Manager.** Enter the address, the authority, the client ID, the client secret, the day the secret expires, the administrator group and the certificate.
+8. **Review and apply.** The review lists every change. Nothing changes before you select Apply. Then the services start and the health page checks them.
 
 :::caution
 The wizard can make the root on the server for a small environment.

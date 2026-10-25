@@ -70,8 +70,9 @@ The page reads the installation ID from `root.public.json`.
 
 The file holds no personal data.
 You get a license file back.
-A license is optional.
-Without a license, Greenhold works for 5 devices.
+Without a license, Greenhold works for 90 days, with up to 5 devices and 5 packages.
+A trial file works for the period that it states.
+See [Use without a license](/get-started/before-you-install/#use-without-a-license).
 
 ### 3. Make an administrator key
 

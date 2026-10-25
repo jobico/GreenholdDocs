@@ -7,31 +7,71 @@ Do these steps with `greenhold-library` on the refresh computer.
 Do the signing on your own computer with `greenhold-sign`.
 Run `greenhold-library --help` for every command.
 
+<<<<<<< HEAD
 ## Before you start
 
 - Get `greenhold-library.exe`. It is in the folder `Greenhold.Library.Cli` of the release. Copy the folder to the refresh computer, for example to `C:\Program Files\Greenhold\Library`. Run the commands from that folder, or give the full path.
 - Get `root.public.json` of your installation. On the Greenhold server, it is `C:\ProgramData\Greenhold\Gateway\root.public.json`.
 - Check that the installation ID in `root.public.json` is a GUID. A library cannot use an installation ID that is not a GUID. Then make a new root with a GUID as installation ID, and use that root for the library and for the agents.
 - For a package from WinGet or a URL, the refresh computer needs internet access.
+=======
+A library belongs to one installation.
+The root of that installation signs it.
+>>>>>>> dev/security-batch-2-docs
 
 ## 1. Create the library
 
+### With the setup wizard
+
+The setup wizard has a **Library** page.
+It comes after the **License** page.
+
+1. Select **Make a Library for this installation**.
+2. Type the folder of the Library: a full path or a UNC path. The folder must be empty or hold a Library of this installation.
+3. Optionally, type a name.
+4. Continue to the review and select Apply.
+
+The wizard makes the Library for the installation of the root from the earlier steps.
+It also pins that root on the server.
+You do not type an installation ID.
+Then continue at [3. Add a package](#3-add-a-package).
+
+The wizard never overwrites a Library:
+
+- If the folder holds a Library of this installation, the wizard only pins the root.
+- If the folder holds a Library of another installation, the wizard stops and changes nothing.
+- If the folder holds other files, the wizard stops.
+
+The account that runs the wizard needs write access to the folder or the share.
+For a local folder, the wizard refuses a link in the path.
+It also refuses a folder that an account other than Administrators, SYSTEM or the account that runs the wizard owns.
+
+Make a library on Azure Blob in the Manager. See [Azure Blob libraries](/library/azure-blob/).
+
+### On the command line
+
 ```
-greenhold-library create --library \\files\library --name "Library" --installation <installation ID>
+greenhold-library create --library \\files\library --name "Library"
 ```
 
 `--library` is a full path or a UNC path.
 A relative path is refused.
 The command prints the ID of the library and its **installation ID**.
 
-A library belongs to one installation.
-The root of that installation signs it.
-Give the installation ID with `--installation`.
-Find it in `root.public.json`, as the value of `installationId`.
-The setup wizard and Admin Tools make this file.
-The ID is a GUID, for example `6757bb89-1258-40a6-b363-6930cd246c3f`.
+On the Greenhold server, `create` uses the installation of the root that setup holds.
+The command prints the installation ID and the key ID that it used.
+Compare the key ID with the key ID of the root holder.
 
-Without `--installation`, the library gets a new installation ID.
+Run the command as an administrator on the server.
+Other accounts cannot read the root that setup holds.
+If the file of that root is not protected, the command ignores it, says why, and continues as on another computer.
+
+On another computer, give the installation ID with `--installation`.
+Find it in `root.public.json`, as the value of `installationId`.
+The ID is a GUID, for example `6757bb89-1258-40a6-b363-6930cd246c3f`.
+`--installation` always wins over the root that setup holds.
+
+Without `--installation` and without the root of setup, the library gets a new installation ID.
 Then make a root for that ID.
 Nothing can be published until that installation has a root and an administrator key.
 Make them with `greenhold-sign root-create --installation <id>`, `admin-create` and `admin-certify`.
@@ -39,11 +79,26 @@ See [Before you install](/get-started/before-you-install/) or [Admin Tools](/get
 
 ## 2. Pin the root
 
+The setup wizard does this step when it makes the Library.
+
+On the Greenhold server:
+
+```
+greenhold-library pin-root --library \\files\library
+```
+
+The command pins the root that setup holds.
+It prints the installation ID and the key ID that it used.
+
+On another computer:
+
 ```
 greenhold-library pin-root --library \\files\library --root root.public.json
 ```
 
 Get `root.public.json` from the root holder through a channel that the writers of the library cannot change.
+`--root` always wins over the root that setup holds.
+
 Compare the key ID that the command prints with the key ID of the root holder.
 A root of another installation is refused.
 

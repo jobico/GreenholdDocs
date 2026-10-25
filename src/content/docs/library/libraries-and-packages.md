@@ -11,8 +11,10 @@ A library does not depend on the server.
 You can use a library with agents, with the Library Installer on image masters, or with both.
 
 :::note
-Without a license, you can add at most 5 packages to a library.
-A license removes this limit.
+Without a license, you can add at most 5 packages to a library, for 90 days.
+After the 90 days, the library refuses new packages, new versions and publications that add versions.
+A license removes these limits.
+See [Use without a license](/get-started/before-you-install/#use-without-a-license).
 :::
 
 ## Where a library lives
