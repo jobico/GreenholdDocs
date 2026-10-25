@@ -262,8 +262,53 @@ By default, an agent accepts only hardware-backed keys.
 A key file from Greenhold Admin or `greenhold-sign admin-create` is a software key. A key in the TPM or on a security key is not.
 
 **Fix.** For a lab, add `software` to `AcceptedKeyKinds`.
+The value replaces the default list. It does not add to it. Give the full list, on the device, as administrator:
+
+```powershell
+New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Greenhold\Agent -Name AcceptedKeyKinds -PropertyType MultiString -Value software,windows-hello,passkey,security-key,vault -Force
+Restart-Service GreenholdAgent
+```
+
+A refused Order stays refused. Send the job again.
 See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
 For production, sign with a hardware-backed key.
+
+## A job waits, and the agent log says the library cannot be reached
+
+**Symptom.** A job that installs a package stays at "Waiting for the device".
+`%ProgramData%\Greenhold\Agent\agent.log` shows `LibraryUnreachableException` with the library path.
+
+**Cause.** The agent reads the library from the path in its `Libraries` policy, as SYSTEM.
+The device cannot open that path. Examples: the path is a folder on the server, not on the device.
+Or the device is not in the domain of the server, so it has no account for the share.
+
+**Fix.**
+
+| Device | Fix |
+|---|---|
+| In the same domain as the library | Share the library folder. Give the computer account of the device (`DOMAIN\NAME$`) or a group of devices read access. Set the `Libraries` value of the device to the UNC path. |
+| Not in the domain | Copy the library folder to the device, or use an Azure Blob container. Set the `Libraries` value to that location. The copy is safe: the agent checks each file against the signed publication. |
+
+Then run `Restart-Service GreenholdAgent`. The agent takes the job again within 30 minutes.
+A later version of Greenhold delivers the package files through the gateway, so a device does not need access to the library.
+
+## A package install fails with 1303 or 1603
+
+**Symptom.** A Run fails with exit code 1603. The installer log says `Error 1303. The installer has insufficient privileges to access this directory`, for example `C:\Program Files\7-Zip`.
+The folder does not exist, and an administrator can make folders in `C:\Program Files`.
+
+**Cause.** Software on the device blocks the folders of that app. Common examples:
+
+- FSLogix App Masking: a rule hides the app's folders. Hidden folders cannot be made, also not by SYSTEM.
+- Ivanti Application Control or Workspace Control: a rule blocks the app.
+
+**Check.** On the device, as administrator:
+
+```powershell
+Select-String -Path 'C:\Program Files\FSLogix\Apps\Rules\*.fxr' -Pattern '7-Zip' -SimpleMatch -Encoding Unicode
+```
+
+**Fix.** Remove the rule (the `.fxr` file and its `.fxa` file), or change it so that it does not apply to SYSTEM. Then send the job again.
 
 ## New work stops after 90 days
 
