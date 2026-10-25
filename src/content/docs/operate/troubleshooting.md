@@ -287,7 +287,7 @@ Or the device is not in the domain of the server, so it has no account for the s
 | Device | Fix |
 |---|---|
 | In the same domain as the library | Share the library folder. Give the computer account of the device (`DOMAIN\NAME$`) or a group of devices read access. Set the `Libraries` value of the device to the UNC path. |
-| Not in the domain | Copy the library folder to the device, or use an Azure Blob container. Set the `Libraries` value to that location. The copy is safe: the agent checks each file against the signed publication. |
+| Not in the domain | Copy the library folder to the device. Set the `Libraries` value to that folder. The copy is safe: the agent checks each file against the signed publication. The agent does not read a library from Azure Blob yet. |
 
 Then run `Restart-Service GreenholdAgent`. The agent takes the job again within 30 minutes.
 A later version of Greenhold delivers the package files through the gateway, so a device does not need access to the library.
