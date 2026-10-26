@@ -28,18 +28,18 @@ These are the POLICY values:
 | `POLICYINSTALLATIONID` | `installationId` from `root.public.json` |
 
 :::caution[A software key needs one more property]
-An agent accepts only hardware-backed keys by default: Windows Hello, passkey, security key and vault.
+An agent accepts only hardware-backed keys by default: TPM, passkey, security key and vault.
 It refuses an Order that is signed with a software key.
 A key file of Greenhold Admin and the key that the setup wizard makes on the server are software keys.
 For a lab, add this property to the command:
 
 ```
-POLICYACCEPTEDKEYKINDS="software,windows-hello,passkey,security-key,vault"
+POLICYACCEPTEDKEYKINDS="software,tpm,passkey,security-key,vault"
 ```
 
 The value replaces the whole list. It does not add to the defaults.
 Give every kind that you accept.
-In version 0.1.4, a TPM key is `windows-hello`.
+Version 0.1.4 called a TPM key `windows-hello`. From version 0.1.6 it is `tpm`, and an agent refuses `windows-hello`.
 With `software` alone, the agent refuses an Order that a TPM key signed.
 
 The wizard adds it when you tick **My administrator's key is a software key (a lab)**.

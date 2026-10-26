@@ -48,7 +48,7 @@ Use it only for an installation that is set up.
    Start-Service GreenholdGateway, GreenholdManager
    ```
 
-5. If you have a library, start the two Library services. In version 0.1.4, setup does not start them. A later version starts them for you. Run this in PowerShell as an administrator:
+5. If you have a library and upgrade **to** version 0.1.4, start the two Library services. Setup of version 0.1.4 does not start them; from version 0.1.6 setup starts them for you. Run this in PowerShell as an administrator:
 
    ```powershell
    Start-Service GreenholdLibraryRefresh, GreenholdLibraryPublisher
@@ -61,7 +61,7 @@ Use it only for an installation that is set up.
    icacls D:\GreenholdLibrary /inheritance:r /grant:r "*S-1-5-32-544:(OI)(CI)F" "*S-1-5-18:(OI)(CI)F" "NT SERVICE\GreenholdManager:(OI)(CI)M" "NT SERVICE\GreenholdLibraryRefresh:(OI)(CI)M" "NT SERVICE\GreenholdLibraryPublisher:(OI)(CI)M"
    ```
 
-   If `icacls` says that it cannot map an account name, run the server installer of version 0.1.4 and setup first. A later version's setup checks the permissions and corrects them. See [Protect the library folder](/library/create-a-library/#protect-the-library-folder).
+   If `icacls` says that it cannot map an account name, run the server installer of version 0.1.4 and setup first. From version 0.1.6, setup checks the permissions: when the folder is not protected, the Library step stops, and the other services stay stopped until it is done. Choose **Fix it** on the Library page, or with an answers file set `Library.ProtectFolder: true` and run setup again. See [Protect the library folder](/library/create-a-library/#protect-the-library-folder).
 7. Check the result. See [Check the upgrade](#check-the-upgrade).
 
 ## Run the database migrations
@@ -109,8 +109,14 @@ If you do not have it, use the wizard.
    ```
 
 2. The key, the identity and the policy stay. The device does not enroll again.
+
+   **From version 0.1.4 to 0.1.6 or later:** a TPM key kind is now `tpm`, not `windows-hello`. If the agent's `AcceptedKeyKinds` names `windows-hello`, change it **before** the upgrade, or the agent stops at start and writes why in `agent.log` and in Event Viewer (Applications and Services Logs > Greenhold > Agent). For example:
+
+   ```powershell
+   New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Greenhold\Agent -Name AcceptedKeyKinds -PropertyType MultiString -Value software,tpm,passkey,security-key,vault -Force
+   ```
 3. If you gave the `POLICY...` properties at the first install, the installer remembers them. An upgrade without properties keeps them. A property that you give replaces that one value and keeps the others. Group Policy overrides them at its next refresh.
-4. An agent without `AcceptedKeyKinds` uses the strict defaults after the upgrade. It refuses an Order that is signed with a software key. For a lab, add `POLICYACCEPTEDKEYKINDS="software,windows-hello,passkey,security-key,vault"` to the command, or set the policy. The value replaces the whole list. Give every kind that you accept. With `software` alone, the agent refuses an Order that a TPM key signed. See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
+4. An agent without `AcceptedKeyKinds` uses the strict defaults after the upgrade. It refuses an Order that is signed with a software key. For a lab, add `POLICYACCEPTEDKEYKINDS="software,tpm,passkey,security-key,vault"` to the command, or set the policy. The value replaces the whole list. Give every kind that you accept. With `software` alone, the agent refuses an Order that a TPM key signed. See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
 
 To upgrade many computers, use your software distribution tool with the same command.
 A software-installation GPO needs `LICENSEACCEPTED=1` in a transform (`.mst`).

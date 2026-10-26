@@ -13,7 +13,7 @@ An agent runs only what a certified key signed.
 
 | Place | Kind of key | Use |
 |---|---|---|
-| This computer's TPM | `windows-hello` | Recommended. The key is made in the TPM and cannot leave it. |
+| This computer's TPM | `tpm` | Recommended. The key is made in the TPM and cannot leave it. |
 | A security key (PIV), such as a YubiKey | `security-key` | The key is made on the security key and cannot leave it. The security key asks for its own PIN. |
 | A key file with a passphrase | `software` | For a test or a lab only. |
 
@@ -127,7 +127,7 @@ It never certifies a kind that the request only claims.
 | The request holds | The key is certified as | What the root checks |
 |---|---|---|
 | No proof | `software` | Nothing more. A request that claims another kind without proof is refused. |
-| A TPM's proof | `windows-hello` | The TPM's endorsement certificate is from a vendor you trust. The TPM made the key, and the key cannot leave the TPM. The certificate is sealed: only that TPM can open it. |
+| A TPM's proof | `tpm` | The TPM's endorsement certificate is from a vendor you trust. The TPM made the key, and the key cannot leave the TPM. The certificate is sealed: only that TPM can open it. |
 | A security key's proof | `security-key` | The attestation certificate of the security key is from a vendor you trust. It says that the key was made on the security key. The page shows its serial number. |
 
 No proof shows whether a PIN is asked before each signature.

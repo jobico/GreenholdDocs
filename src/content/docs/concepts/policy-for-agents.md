@@ -90,7 +90,7 @@ Never give an enrollment token as a property.
 | `SecondSignerRule` | 0 or 1 | 1 | Two signers for an Order that targets a server, a tag, or more devices than `SecondSignerAbove`. |
 | `SecondSignerAbove` | 1 to 100000 | 25 | The device count above which an Order needs two signers. |
 | `AlwaysSecondSigner` | 0 or 1 | 0 | Two signers for every Order. |
-| `AcceptedKeyKinds` | list | `windows-hello`, `passkey`, `security-key`, `vault` | The key kinds whose signatures count: `software`, `windows-hello`, `passkey`, `security-key`, `vault`. The default has no `software`. |
+| `AcceptedKeyKinds` | list | `tpm`, `passkey`, `security-key`, `vault` | The key kinds whose signatures count: `software`, `tpm`, `passkey`, `security-key`, `vault`. The default has no `software`. |
 | `AllowTagRelaxation` | 0 or 1 | 0 | Whether a signed amendment can make a tag Order follow the device count. |
 | `Tags` | list | none | The tags of this computer. An Order for a tag names this computer when it carries the tag. |
 | `RunTimeoutMinutes` | 1 to 1440 | 60 | The time that one Run can take. The agent stops a Run that takes longer. |
@@ -103,7 +103,7 @@ See [Orders and Releases](/dispatch/orders-and-releases/).
 
 An agent without `AcceptedKeyKinds` and `AllowTagRelaxation` uses the strict defaults:
 
-- Only signatures from hardware-backed keys count: Windows Hello, passkey, security key and vault.
+- Only signatures from hardware-backed keys count: TPM, passkey, security key and vault.
 - A signed amendment cannot relax the tag rule.
 
 The agent refuses an Order that is signed with a software key.
@@ -119,12 +119,12 @@ To relax the defaults for a lab, do one of these steps:
 - Give the properties to the agent MSI:
 
   ```
-  POLICYACCEPTEDKEYKINDS="software,windows-hello,passkey,security-key,vault"
+  POLICYACCEPTEDKEYKINDS="software,tpm,passkey,security-key,vault"
   ```
 
   The value replaces the whole list. It does not add `software` to the defaults.
   Give every kind that you accept.
-  In version 0.1.4, a TPM key is `windows-hello`.
+  Version 0.1.4 called a TPM key `windows-hello`. From version 0.1.6 it is `tpm`, and an agent refuses `windows-hello`.
   With `POLICYACCEPTEDKEYKINDS="software"` alone, the agent refuses an Order that a TPM key signed.
   The installer remembers the value for later upgrades.
 
