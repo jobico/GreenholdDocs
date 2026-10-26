@@ -70,6 +70,7 @@ The installer remembers the values that you give.
 It writes them again when you repair or upgrade the agent without properties.
 Group Policy that sets the same value overrides them at the next refresh.
 Never give an enrollment token as a property.
+For the formats, the defaults and what the installer remembers, see [Installer properties](/reference/installer-properties/).
 
 ## The values
 

@@ -90,7 +90,7 @@ export default defineConfig({
             'operate/remove-greenhold',
           ],
         },
-        { label: 'Reference', items: ['reference/command-line', 'third-party-notices'] },
+        { label: 'Reference', items: ['reference/command-line', 'reference/installer-properties', 'third-party-notices'] },
       ],
     }),
   ],

@@ -115,7 +115,7 @@ If you do not have it, use the wizard.
    ```powershell
    New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Greenhold\Agent -Name AcceptedKeyKinds -PropertyType MultiString -Value software,tpm,passkey,security-key,vault -Force
    ```
-3. If you gave the `POLICY...` properties at the first install, the installer remembers them. An upgrade without properties keeps them. A property that you give replaces that one value and keeps the others. Group Policy overrides them at its next refresh.
+3. If you gave the `POLICY...` properties at the first install, the installer remembers them. An upgrade without properties keeps them. A property that you give replaces that one value and keeps the others. Group Policy overrides them at its next refresh. See [Installer properties](/reference/installer-properties/#how-the-installer-remembers-the-policy-values).
 4. An agent without `AcceptedKeyKinds` uses the strict defaults after the upgrade. It refuses an Order that is signed with a software key. For a lab, add `POLICYACCEPTEDKEYKINDS="software,tpm,passkey,security-key,vault"` to the command, or set the policy. The value replaces the whole list. Give every kind that you accept. With `software` alone, the agent refuses an Order that a TPM key signed. See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
 
 To upgrade many computers, use your software distribution tool with the same command.

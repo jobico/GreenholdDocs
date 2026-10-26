@@ -1,0 +1,489 @@
+---
+title: Installer properties
+description: The properties of the three Greenhold MSIs, the msiexec switches, examples for Intune, ConfigMgr and Group Policy, and what upgrade and uninstall do.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Greenhold has three installers.
+Each is an MSI for 64-bit Windows, per machine.
+This page is for version 0.1.6.
+
+| Installer | Installs | Services |
+|---|---|---|
+| `Greenhold-Agent-<version>-x64.msi` | The agent in `C:\Program Files\Greenhold\Agent`. | `GreenholdAgent` |
+| `Greenhold-Server-<version>-x64.msi` | The gateway, the Manager, the setup wizard and the Library programs in `C:\Program Files\Greenhold`. | `GreenholdGateway`, `GreenholdManager`, `GreenholdLibraryRefresh`, `GreenholdLibraryPublisher` |
+| `Greenhold-AdminTools-<version>-x64.msi` | Greenhold Admin and `greenhold-sign` in `C:\Program Files\Greenhold\Admin Tools`. Install it on the computer of an administrator, never on the server. | None |
+
+The properties on this page are the whole interface of the installers.
+The installers take no answer file.
+
+:::note
+Greenhold has not tested Intune, ConfigMgr or Group Policy software installation with these MSIs yet.
+The examples on this page follow the rules of Windows Installer.
+Test them on a small group of computers first.
+:::
+
+## Properties of every installer
+
+| Property | Installers | Values | Default | Remembered |
+|---|---|---|---|---|
+| `LICENSEACCEPTED` | All three | `1` | Not set | No |
+
+`LICENSEACCEPTED=1` states that you accept the license agreement in `LICENSE.txt`.
+
+- A silent install needs it. This includes `/qn`, `/qb` and `/passive`.
+- Without it, the install stops with exit code 1603 and changes nothing.
+- An upgrade is a new install for Windows Installer. A silent upgrade needs it too.
+- A repair or an uninstall does not need it.
+- With the full dialogs, you accept the agreement in the dialog. You do not need the property.
+- Write the name in capitals. Windows Installer ignores a property in lower case for an elevated install.
+
+## Agent installer
+
+| Property | Values | Default | Remembered | Registry value |
+|---|---|---|---|---|
+| `STARTSERVICES` | `1` | Not set | No | None |
+| `POLICYENROLLMENTURL` | https address | Not set | Yes | `GatewayEnrollmentUrl` |
+| `POLICYCHANNELURL` | https address | Not set | Yes | `GatewayChannelUrl` |
+| `POLICYCHANNELAUTHORITY` | Base64 DER certificate | Not set | Yes | `ChannelAuthority` |
+| `POLICYINSTALLATIONROOT` | Root key set | Not set | Yes | `InstallationRootPublicKey` |
+| `POLICYINSTALLATIONID` | Text | Not set | Yes | `InstallationId` |
+| `POLICYACCEPTEDKEYKINDS` | List of key kinds | Not set | Yes | `AcceptedKeyKinds` |
+| `POLICYALLOWTAGRELAXATION` | `0` or `1` | Not set | Yes | `AllowTagRelaxation` |
+
+### STARTSERVICES
+
+`STARTSERVICES=1` starts the agent service at the end of the install.
+Without it, the installer does not start the agent, also not after an upgrade.
+The agent then stays stopped until you start it or until the computer starts again.
+
+Use it only when the agent has its policy.
+An agent without policy does not start.
+Windows logs events 7000 and 7009 after 30 seconds, and the service stays stopped.
+The install still succeeds.
+Check the service after the install:
+
+```powershell
+Get-Service GreenholdAgent
+```
+
+### The POLICY properties
+
+The seven `POLICY...` properties write policy values for the agent.
+They are for a test computer or a small site.
+For many computers, set the policy with Group Policy or Intune.
+See [Policy for agents](/concepts/policy-for-agents/).
+
+The installer writes each value only when you give its property.
+It writes the value as text (`REG_SZ`) to this key:
+
+```
+HKLM\SOFTWARE\Policies\Greenhold\Agent
+```
+
+This is the same key that Group Policy and Intune write.
+
+:::danger[Never put an enrollment token on the command line]
+There is no property for the enrollment token.
+Every process on the computer can see a command line, and the installer log keeps it.
+The agent asks for the token when you run `Greenhold.Agent.exe enroll`, or reads it from standard input.
+See [Enroll your first device](/get-started/enroll-your-first-device/#3-enroll).
+:::
+
+#### POLICYENROLLMENTURL and POLICYCHANNELURL
+
+The addresses of the gateway: the enrollment listener and the agent channel.
+
+- Format: `https://<name>:<port>`. Give the host and the port only.
+- The agent refuses an address with `http`, a path, a query, a fragment or a user name.
+- The name must be one of the names or addresses that the gateway's `init` got with `--dns` or `--ip`.
+- The usual ports are 8444 for enrollment and 8443 for the channel.
+- An IPv6 address goes in brackets: `https://[fd00::10]:8443`.
+
+```
+POLICYENROLLMENTURL="https://gateway.example.com:8444" POLICYCHANNELURL="https://gateway.example.com:8443"
+```
+
+#### POLICYCHANNELAUTHORITY
+
+The authority certificate of the gateway, as base64 of the DER file.
+The agent trusts only this certificate for the gateway.
+
+- It must be a CA certificate.
+- It must not contain a private key.
+- The file on the server is `C:\ProgramData\Greenhold\Gateway\channel-authority.cer`.
+
+To get the value, run this on the server:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes('C:\ProgramData\Greenhold\Gateway\channel-authority.cer'))
+```
+
+#### POLICYINSTALLATIONROOT and POLICYINSTALLATIONID
+
+The public key set of the installation root, and the ID of the installation.
+Give both or neither.
+The agent refuses one without the other.
+
+- `POLICYINSTALLATIONROOT` is the **Policy value** that `greenhold-sign root-create` prints. It is also in `root.public.json`.
+- Format: `alg:base64` entries, separated by semicolons. Version 0.1.6 knows one algorithm, `ecdsa-p256-sha256`. For example: `ecdsa-p256-sha256:MFkwEwYHKoZIzj0CAQ...`.
+- The agent refuses a bare base64 key without the algorithm.
+- `POLICYINSTALLATIONID` is `installationId` from `root.public.json`. It has at most 128 characters.
+
+Put each value in double quotes.
+In PowerShell, a value with a semicolon needs the quotes.
+
+An agent without a root starts, but it refuses all work.
+
+#### POLICYACCEPTEDKEYKINDS
+
+The kinds of administrator keys whose signatures the agent accepts.
+
+- Format: a list of kinds, separated by commas, in lower case. Spaces around a kind are ignored.
+- The kinds are `software`, `tpm`, `passkey`, `security-key` and `vault`.
+- **The value replaces the whole list.** It does not add to the default list. Give every kind that you accept.
+- Without the value, the agent accepts `tpm`, `passkey`, `security-key` and `vault`. It refuses `software`.
+- A kind that the agent does not know stops the agent at start. The agent log names the kind.
+- A value with no kind also stops the agent at start. The agent never uses a wider list instead.
+- Version 0.1.4 called a TPM key `windows-hello`. The agent now refuses that name.
+
+For a lab where the administrator has a software key, give all five:
+
+```
+POLICYACCEPTEDKEYKINDS="software,tpm,passkey,security-key,vault"
+```
+
+:::caution
+A software key is a file in the profile of the administrator.
+Malware on that computer can use it to sign Orders.
+Do not accept `software` in production.
+:::
+
+With `POLICYACCEPTEDKEYKINDS="software"` alone, the agent refuses an Order that a TPM key signed.
+
+Group Policy writes this value as a multi-string, one kind on each line.
+The agent reads both forms.
+
+#### POLICYALLOWTAGRELAXATION
+
+Whether a signed amendment can relax the tag rule.
+
+- `1`: a signed amendment can make an Order for a tag follow the device count.
+- `0`: the agent forbids it. This is the same as the default, written explicitly.
+- Without the value, the agent forbids it.
+- Another value stops the agent at start.
+
+Give `POLICYALLOWTAGRELAXATION=1` only if you use signed amendments that relax the tag rule.
+See [Second signer and tags](/dispatch/second-signer-and-tags/).
+
+### How the installer remembers the POLICY values
+
+The installer keeps a copy of each `POLICY...` value that it writes, in its own key:
+
+```
+HKLM\SOFTWARE\Greenhold\Installer\Agent
+```
+
+| Property | Remembered as |
+|---|---|
+| `POLICYENROLLMENTURL` | `PolicyEnrollmentUrl` |
+| `POLICYCHANNELURL` | `PolicyChannelUrl` |
+| `POLICYCHANNELAUTHORITY` | `PolicyChannelAuthority` |
+| `POLICYINSTALLATIONROOT` | `PolicyInstallationRoot` |
+| `POLICYINSTALLATIONID` | `PolicyInstallationId` |
+| `POLICYACCEPTEDKEYKINDS` | `PolicyAcceptedKeyKinds` |
+| `POLICYALLOWTAGRELAXATION` | `PolicyAllowTagRelaxation` |
+
+These rules apply:
+
+- An upgrade or a repair without a property uses the remembered value. It writes the policy value again.
+- A property that you give replaces that one value. The installer keeps the other remembered values.
+- A repair puts back the remembered value over a change that you made by hand in the policy key.
+- An empty property, for example `POLICYALLOWTAGRELAXATION=""`, counts as not given. The installer then uses the remembered value. You cannot remove a value with an empty property.
+- The uninstall removes the policy values that the installer wrote, and the remembered values.
+
+To remove one remembered value, delete it in both keys.
+Or uninstall the agent and install it again with the properties that you want.
+
+### Group Policy and Intune win
+
+Group Policy and Intune write the same registry values as the installer.
+When they apply their policy, their value replaces the value of the installer.
+
+Use one source for each value.
+Do not give a `POLICY...` property for a value that Group Policy or Intune also sets.
+A repair or an uninstall of the agent changes or removes the values that the installer wrote, also when Group Policy set them later.
+Group Policy writes its values again when it next applies them.
+
+## Server installer
+
+| Property | Values | Default | Remembered |
+|---|---|---|---|
+| `STARTSERVICES` | `1` | Not set | No |
+| `STARTSETUP` | `1` or empty | `1` | No |
+
+### STARTSERVICES
+
+`STARTSERVICES=1` starts the services at the end of the install: `GreenholdGateway`, `GreenholdManager`, `GreenholdLibraryRefresh` and `GreenholdLibraryPublisher`.
+Without it, the installer starts no service, also not after an upgrade.
+
+Use it only for a server that is set up.
+A service that is not set up does not start.
+The install still succeeds.
+After an upgrade, the usual step is to run the setup wizard. It starts the services for you.
+See [Upgrade Greenhold](/operate/upgrade-greenhold/).
+
+### STARTSETUP
+
+`STARTSETUP` is the box **Start the setup wizard now** on the last page of the installer.
+The box is ticked by default.
+When you choose **Finish** with the box ticked, the setup wizard starts.
+
+- A silent install shows no last page. It never starts the setup wizard.
+- A repair does not start the setup wizard.
+- You do not need to set this property. Clear the box in the dialog if you want to start the wizard later.
+
+Start the wizard later from the Start menu: **Greenhold Server Setup**.
+
+### Features
+
+The server installer has four features.
+By default, it installs all four.
+
+| Feature | What |
+|---|---|
+| `Gateway` | The agent gateway. |
+| `Manager` | The Manager, the web console. |
+| `Setup` | The setup wizard and its Start menu entry. |
+| `Library` | `greenhold-library` and the automatic publisher, with their two services. |
+
+Install all four on the server.
+The setup wizard expects all of them.
+Greenhold does not document an install of only some features.
+
+## Admin Tools installer
+
+The Admin Tools installer has no property of its own.
+Only `LICENSEACCEPTED` applies.
+
+It writes one registry key: `HKLM\SOFTWARE\Classes\greenhold`.
+This key lets the **Sign with Greenhold Admin** button of the Manager open Greenhold Admin.
+
+## Folder properties
+
+Windows Installer lets you change the folder of each part on the command line.
+
+| Installer | Folder properties | Default folder |
+|---|---|---|
+| Agent | `INSTALLFOLDER` | `C:\Program Files\Greenhold\Agent` |
+| Server | `GATEWAYFOLDER`, `MANAGERFOLDER`, `SETUPFOLDER`, `LIBRARYFOLDER`, `LIBRARYPUBLISHERFOLDER` | `Gateway`, `Manager`, `Setup`, `Library` and `LibraryPublisher` in `C:\Program Files\Greenhold` |
+| Admin Tools | `ADMINTOOLSFOLDER`, `SIGNTOOLFOLDER` | `C:\Program Files\Greenhold\Admin Tools` and its subfolder `greenhold-sign` |
+
+:::caution[Do not change the folders]
+Greenhold supports only the default folders.
+The setup wizard looks for the server programs in `C:\Program Files\Greenhold`.
+The commands in this documentation use the default folders.
+In Program Files, only Administrators, SYSTEM and TrustedInstaller can change the programs.
+Another folder can let other accounts replace a program that runs as SYSTEM.
+:::
+
+## msiexec switches
+
+Run `msiexec` from an elevated prompt.
+Give the full path to the MSI.
+A relative path that is not in the current folder stops with error 2203.
+
+| Switch | What it does |
+|---|---|
+| `/i <msi>` | Install or upgrade. |
+| `/x <msi or product code>` | Uninstall. |
+| `/fam <msi>` | Repair: put back the files and the registry values of the installer. |
+| `/qn` | No dialogs. A silent install needs `LICENSEACCEPTED=1`. |
+| `/qb`, `/passive` | Only a progress bar. These also need `LICENSEACCEPTED=1`. |
+| `/norestart` | Never restart the computer. The installer returns 3010 when a restart is necessary. |
+| `/l*v <file>` | Write a full log. Use it every time. When an install fails, search the log for `return value 3`. |
+
+Put a property value in double quotes when it has a space or a semicolon.
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | The install, upgrade, repair or uninstall succeeded. |
+| 1603 | It failed and changed nothing. The usual causes: `LICENSEACCEPTED=1` is missing, or a newer version is installed. On the server, the installer also stops when a Greenhold folder in `C:\ProgramData` is a junction, a link or a file. The log says why. |
+| 1618 | Another install runs. Try again later. |
+| 1619, 2203 | Windows Installer did not find the MSI. Check the path. |
+| 1641 | The installer started a restart. This does not happen with `/norestart`. |
+| 3010 | It succeeded. A restart is necessary to complete it, for example because a file was in use. |
+
+The Greenhold installers do not ask for a restart in normal use.
+
+## Examples
+
+### Install by hand
+
+<Tabs syncKey="interface">
+<TabItem label="GUI">
+
+1. Double-click the MSI.
+2. Read the license agreement and tick **I accept the license agreement**.
+3. Choose **Install**.
+
+The dialogs do not let you give the `POLICY...` properties or `STARTSERVICES`.
+Use the command line for them.
+
+</TabItem>
+<TabItem label="CLI">
+
+Agent, with the policy for a test computer:
+
+```
+msiexec /i C:\path\Greenhold-Agent-0.1.6-x64.msi /qn /norestart LICENSEACCEPTED=1 POLICYENROLLMENTURL="https://gateway.example.com:8444" POLICYCHANNELURL="https://gateway.example.com:8443" POLICYCHANNELAUTHORITY="<base64 DER>" POLICYINSTALLATIONROOT="<policy value>" POLICYINSTALLATIONID="<installation id>" /l*v C:\Windows\Temp\greenhold-agent.log
+```
+
+The last page of the setup wizard shows this command with the values of your server.
+
+Agent, when Group Policy or Intune delivers the policy:
+
+```
+msiexec /i C:\path\Greenhold-Agent-0.1.6-x64.msi /qn /norestart LICENSEACCEPTED=1 /l*v C:\Windows\Temp\greenhold-agent.log
+```
+
+Server:
+
+```
+msiexec /i C:\path\Greenhold-Server-0.1.6-x64.msi /qn /norestart LICENSEACCEPTED=1 /l*v C:\Windows\Temp\greenhold-server.log
+```
+
+Admin Tools:
+
+```
+msiexec /i C:\path\Greenhold-AdminTools-0.1.6-x64.msi /qn /norestart LICENSEACCEPTED=1 /l*v C:\Windows\Temp\greenhold-admintools.log
+```
+
+</TabItem>
+</Tabs>
+
+### Intune: Win32 app
+
+1. Package the agent MSI with the Microsoft Win32 Content Prep Tool (`IntuneWinAppUtil.exe`).
+2. Add a **Windows app (Win32)** in Intune and upload the `.intunewin` file.
+3. Use these commands:
+
+   | Field | Value |
+   |---|---|
+   | Install command | `msiexec /i "Greenhold-Agent-0.1.6-x64.msi" /qn /norestart LICENSEACCEPTED=1 /l*v "C:\Windows\Temp\greenhold-agent.log"` |
+   | Uninstall command | `msiexec /x {<product code>} /qn /norestart` |
+   | Install behavior | System |
+   | Device restart behavior | Determine behavior based on return codes |
+
+4. Detection rule: **MSI**, with the product code of the MSI. Intune reads the product code from the MSI in the `.intunewin` file.
+5. Deliver the policy with an Intune profile from the administrative template. See [Policy for agents](/concepts/policy-for-agents/#intune).
+
+Each build of an installer has its own product code.
+A new version needs a new app in Intune, or a new detection rule.
+The upgrade code stays the same for every version (see [Product codes and upgrade codes](#product-codes-and-upgrade-codes)).
+
+Start the agent after the policy arrives, or add `STARTSERVICES=1` to the install command when the policy is there before the install.
+
+### Configuration Manager
+
+1. Make an application with the deployment type **Windows Installer (\*.msi file)**.
+2. Set the installation program:
+
+   ```
+   msiexec /i "Greenhold-Agent-0.1.6-x64.msi" /qn /norestart LICENSEACCEPTED=1 /l*v "C:\Windows\Temp\greenhold-agent.log"
+   ```
+
+3. Set the uninstall program: `msiexec /x {<product code>} /qn /norestart`. ConfigMgr fills in the product code from the MSI.
+4. Detection method: the Windows Installer product code.
+5. Installation behavior: **Install for system**.
+
+### Group Policy software installation
+
+A software installation GPO installs an MSI without a command line.
+It cannot give `LICENSEACCEPTED=1` on its own.
+Without it, the install fails.
+
+To use a GPO, you need a transform (`.mst`) that sets `LICENSEACCEPTED` to `1`.
+Add the transform to the package on the **Modifications** tab.
+
+Greenhold does not provide a transform yet.
+You can make one yourself, for example with Orca from the Windows SDK: add the property `LICENSEACCEPTED` with the value `1` to the `Property` table, then generate the transform.
+A transform that sets `LICENSEACCEPTED` means that your organization accepts the license agreement for every computer that gets the GPO.
+
+Deliver the policy of the agent with the administrative template, not with properties in the transform.
+
+## Upgrade
+
+Install the new MSI over the old one.
+Do not uninstall first.
+
+- The installer stops the services, removes the old version and installs the new one.
+- It starts no service, unless you give `STARTSERVICES=1`.
+- The agent keeps its key, identity and policy. It does not enroll again.
+- The agent installer reads the remembered `POLICY...` values. See [How the installer remembers the POLICY values](#how-the-installer-remembers-the-policy-values).
+- `LICENSEACCEPTED`, `STARTSERVICES` and `STARTSETUP` are not remembered. Give them again for each install.
+- You cannot install an older version over a newer one. The installer stops with exit code 1603.
+- Windows Installer ignores the fourth part of the version. Two builds with the same first three parts replace each other.
+
+See [Upgrade Greenhold](/operate/upgrade-greenhold/) for the steps on the server.
+
+## Uninstall
+
+```
+msiexec /x C:\path\Greenhold-Agent-0.1.6-x64.msi /qn /norestart /l*v C:\Windows\Temp\greenhold-agent-uninstall.log
+```
+
+You can also use **Settings > Apps** or the product code.
+The uninstall removes the program files and the services.
+It unregisters the event logs. The events that were written stay in the log files.
+
+What stays:
+
+| Installer | What stays |
+|---|---|
+| Agent | The key, the identity and the log of the agent in `%ProgramData%\Greenhold\Agent`. The policy values that the installer did not write. |
+| Server | The gateway authority and its keys, the listener certificate, the data folder, the logs, the key ring of the Manager, the settings files in `%ProgramData%\Greenhold`, the library folders and the database. |
+| Admin Tools | The root, the keys, the certificates and the requests of the administrator. They are the files of the person. |
+
+The agent uninstall removes the `POLICY...` values that its installer wrote, and the remembered values.
+
+To remove everything, see [Remove Greenhold](/operate/remove-greenhold/).
+
+## Product codes and upgrade codes
+
+| Installer | Upgrade code |
+|---|---|
+| Agent | `{6AD5F39F-CB05-4908-917D-E0F025FEBAAC}` |
+| Server | `{0BFEA1AF-3879-45F8-8648-4C8D9B882D2C}` |
+| Admin Tools | `{6EAECE4B-5BCC-4E4B-9B7A-AD26B2DD091D}` |
+
+The upgrade code is the same for every version.
+The product code changes with every build.
+The product version of a release is the version with `.0` added, for example `0.1.6.0`.
+
+## Agent policy values that are not installer properties
+
+Version 0.1.6 has no installer property for these values.
+Set them with Group Policy, Intune or the registry, in `HKLM\SOFTWARE\Policies\Greenhold\Agent`.
+A later version adds installer properties for them.
+
+| Value | Type | Range | Default | Group Policy name |
+|---|---|---|---|---|
+| `Tags` | Multi-string, or text with commas | Each tag at most 128 characters, no control characters | None | Tags of this endpoint |
+| `RunTimeoutMinutes` | DWORD | 1 to 1440 | 60 | Run time limit (minutes) |
+| `SecondSignerRule` | DWORD | 0 or 1 | 1 | Second signer for broad Orders |
+| `AlwaysSecondSigner` | DWORD | 0 or 1 | 0 | Second signer for every Order |
+| `SecondSignerAbove` | DWORD | 1 to 100000 | 25 | Second signer above (devices) |
+| `Libraries` | Subkey `Libraries`: one text value for each library. The name is the library ID (a GUID). The data is a full local path or a share. | Path at most 1024 characters | None | Libraries InstallPackage may read |
+| `LibraryMinimumSequence` | Subkey `LibraryMinimumSequence`: one value for each library in `Libraries`. The name is the library ID. The data is a DWORD or text of digits. | 1 or more | None | Lowest publication sequence per library |
+| `LibraryMaxAgeDays` | DWORD | 1 to 3660 | No limit | Oldest accepted publication (days) |
+| `RefuseAutomaticPublications` | DWORD | 0 or 1 | 0 | Refuse automatic library publications |
+| `FailedRunLogDays` | DWORD | 1 to 365 | 14 | Keep the logs of failed Runs (days) |
+| `FailedRunLogCount` | DWORD | 1 to 1000 | 20 | Keep the logs of failed Runs (number) |
+
+A value outside its range stops the agent at start.
+`Greenhold.Agent.exe status` names the value.
+For what each value does, see [Policy for agents](/concepts/policy-for-agents/#the-values).
