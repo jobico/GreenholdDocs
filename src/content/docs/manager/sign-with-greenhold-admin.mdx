@@ -43,6 +43,8 @@ These tasks use a signing request:
 For a job, the request page in the Manager also names the devices that do not accept the kind of your key.
 Each device decides by its own policy. The Manager only warns.
 
+![Greenhold Admin warns that a device does not accept the chosen key](../../../assets/screens/admin-job-key-warning.png)
+
 ![The signing request page in the Manager](../../../assets/screens/manager-signing-request.png)
 
 </TabItem>
@@ -90,6 +92,8 @@ Then it signs exactly those bytes.
 | A library publication | The library, the sequence, what it follows, and every change to every package and version. |
 | A job | One screen for the Release (what runs) and the Order (where and when). First a plain summary: what runs, on which devices, from when to when, and who signs. Then each script step, whole, in a box of its own, with the PowerShell that runs it (Windows PowerShell 5.1 or PowerShell 7). For a package: the package and its version. Last, **Technical details**: the IDs, the hashes and the times of the request. |
 | A second signature | The same Order, and who signed it already. |
+
+![The review of a job with two script steps in Greenhold Admin](../../../assets/screens/admin-job-review.png)
 
 You open your key once, and Greenhold Admin signs the Release and the Order.
 A key that Windows was told to ask for before each use asks two times.
