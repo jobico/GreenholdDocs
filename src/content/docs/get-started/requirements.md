@@ -18,10 +18,25 @@ Each item says who can supply it.
 | A certificate for the Manager | Browsers must trust it. Your own certificate authority can issue it. |
 | A computer for each administrator | Greenhold Admin runs there, not on the server. Use a computer with a TPM, or a PIV security key such as a YubiKey, for the administrator keys. |
 
-:::note
-You do not need .NET on any computer.
-The installers include what they need.
-:::
+## .NET
+
+Greenhold uses the .NET 10 that is on the computer. It does not bring its own.
+Install the runtimes before you install Greenhold. Version 0.1.8 needs .NET 10.0.14 or a later .NET 10 update.
+
+| Installer | Runtimes it needs |
+|---|---|
+| Agent | .NET Runtime |
+| Server | ASP.NET Core Runtime, .NET Runtime and .NET Desktop Runtime |
+| Admin Tools | .NET Desktop Runtime and .NET Runtime |
+
+The agent needs only the .NET Runtime.
+Get the runtimes from [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet/10.0), from Microsoft Update, or from your software distribution tool.
+To get later .NET 10 updates from Microsoft Update, turn on updates for other Microsoft products.
+
+Each installer checks the runtimes before it changes anything.
+When one is missing or too old, the installer shows the page ".NET needs an update first" and installs nothing.
+A silent install ends with exit code 1603. The installer log names the version that it needs.
+A repair or an uninstall is not checked.
 
 ## Quick install of PostgreSQL for a test server
 

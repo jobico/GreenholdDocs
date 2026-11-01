@@ -58,6 +58,30 @@ A certificate signs in at `https://login.microsoftonline.com`.
 For another Entra ID cloud, use `--authority-host`:
 `https://login.microsoftonline.us` or `https://login.chinacloudapi.cn`.
 
+## The gateway: delivery to devices
+
+Devices get the files of a library from the gateway.
+When the library is in Azure Blob, the gateway reads the container.
+It reads as an identity of its own, and it only reads.
+
+Give the gateway one of these identities:
+
+| Identity | Settings in `Gateway:LibraryDelivery`, in the `Libraries` entry of the library |
+|---|---|
+| A certificate | `TenantId`, `ClientId` and `CertificateThumbprint`. The certificate is in `LocalMachine\My`, with a private key that the gateway can use. |
+| A managed identity | `ManagedIdentity`: `system`, or the client ID of a user-assigned identity. |
+
+- `Location` is the address of the container, with the folder of the library if there is one. It has no query string.
+- Give the identity **Storage Blob Data Reader** on that container only. Never use the identity of the writer. The gateway must not be able to change the library.
+- Only SYSTEM and Administrators may read the private key of the certificate. In `certlm.msc`, choose **All Tasks**, **Manage Private Keys** and remove every other account. At start, the gateway writes a warning (event 3710) in its event log when another account can read the key.
+- For a sovereign cloud, set `BlobHostSuffix` and `AuthorityHost` in the entry.
+- Greenhold does not check the role in Azure. Check it in **Access control (IAM)** of the container.
+
+The gateway takes no account key, no SAS and no client secret.
+The agent still checks each file against the signed publication.
+Do these steps on every gateway node.
+See [Troubleshooting](/operate/troubleshooting/#a-job-waits-for-the-library) when a device waits for the library.
+
 ## Image masters: read access
 
 A Library Installer only reads.
@@ -104,6 +128,6 @@ Greenhold does not offer anonymous read.
 - A storage account with a hierarchical namespace (Data Lake Storage).
 - The managed identity of an Arc-enabled server, of App Service and of a workload identity.
 - The interactive sign-in of an administrator for the command line.
-- Reading an Azure Blob library from the agent. Agents read a folder or a share.
+- Reading an Azure Blob library on a device. A device gets the files from the gateway, which reads the container.
 - Export of an Ivanti building block for a Blob library.
 - `greenhold-sign` does not read a Blob library directly. Use the files for signing from the Manager.

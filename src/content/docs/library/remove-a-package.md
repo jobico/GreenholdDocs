@@ -35,13 +35,16 @@ An Order runs once.
 A device does not install the package again by itself.
 To stop new installs from the library, do not sign new Orders for the package.
 
-## Remove the library from an agent
+## Stop delivering the library
 
-When an agent no longer needs the library, remove its entry from the policy:
+When devices no longer need the library, remove its entry from `Gateway:LibraryDelivery` in `%ProgramData%\Greenhold\Gateway\appsettings.json` on each gateway node.
+Then restart the gateway:
 
 ```powershell
-Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Greenhold\Agent\Libraries' -Name '<library id>'
-Restart-Service GreenholdAgent
+Restart-Service GreenholdGateway
 ```
 
-If Group Policy sets the value, change the Group Policy instead.
+At start, the gateway forgets the library and delivers none of its files.
+A device that gets a job for the library refuses it with code 50.
+The agent has no setting for the library.
+If an earlier version left a `Libraries` value in the policy of the agent, the agent does not read it. You can remove it.

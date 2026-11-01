@@ -31,6 +31,16 @@ A service that is not set up cannot run.
 To start the services at the end of an upgrade, give `STARTSERVICES=1`.
 Use it only for an installation that is set up.
 
+## Upgrade to version 0.1.8
+
+Do these steps in addition to the upgrade steps below.
+
+- **Install .NET 10 first.** Greenhold uses the .NET 10 on the computer and needs .NET 10.0.14 or a later .NET 10 update. A server needs the ASP.NET Core Runtime, the .NET Runtime and the .NET Desktop Runtime. An agent needs only the .NET Runtime. When a runtime is missing or too old, the installer stops and installs nothing. A silent install ends with exit code 1603. See [Requirements](/get-started/requirements/#net).
+- **The gateway delivers the library files to the agents.** The gateway must have the library in its settings, in the section `Gateway:LibraryDelivery`. Setup adds a library that it makes or finds. Add any other library yourself, for example a library on Azure Blob or on another server, on every gateway node. A device cannot install from a library that is not there. See [Install a package on a device](/library/install-a-package/) and [Azure Blob libraries](/library/azure-blob/).
+- **The `Libraries` policy of the agent is gone.** The agent does not read it. Remove the `Libraries` value from Group Policy, from the registry (`HKLM:\SOFTWARE\Policies\Greenhold\Agent\Libraries`) or from your image. You can leave it: it does no harm.
+- **The event logs have new names.** The logs are now under **Greenhold > Dispatch**, **Library** and **Platform**, for example `Greenhold-Dispatch-Gateway/Operational`. The upgrade removes the old logs and registers the new ones. Change any filter, any event subscription and any log collector rule that uses an old name. See [Logs and support bundles](/operate/logs-and-support-bundles/#the-greenhold-event-logs).
+- **The installer copies every file.** An upgrade over an older version replaces all program files, also files that look newer.
+
 ## Upgrade the server
 
 1. Make a backup of the database. The database holds the list of devices.
@@ -110,7 +120,7 @@ If you do not have it, use the wizard.
 
 2. The key, the identity and the policy stay. The device does not enroll again.
 
-   **From version 0.1.4 to 0.1.6 or later:** a TPM key kind is now `tpm`, not `windows-hello`. If the agent's `AcceptedKeyKinds` names `windows-hello`, change it **before** the upgrade, or the agent stops at start and writes why in `agent.log` and in Event Viewer (Applications and Services Logs > Greenhold > Agent). For example:
+   **From version 0.1.4 to 0.1.6 or later:** a TPM key kind is now `tpm`, not `windows-hello`. If the agent's `AcceptedKeyKinds` names `windows-hello`, change it **before** the upgrade, or the agent stops at start and writes why in `agent.log` and in Event Viewer (Applications and Services Logs > Greenhold > Dispatch > Agent). For example:
 
    ```powershell
    New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Greenhold\Agent -Name AcceptedKeyKinds -PropertyType MultiString -Value software,tpm,passkey,security-key,vault -Force

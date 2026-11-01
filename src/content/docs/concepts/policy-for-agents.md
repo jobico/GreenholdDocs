@@ -47,7 +47,7 @@ Assign it to a device group.
 :::note
 Greenhold documents the Intune route from the Microsoft documentation only.
 Check it on a test group before you rely on it.
-The two list values (`Libraries` and `LibraryMinimumSequence`) may need Group Policy, the image or a script.
+The list value `LibraryMinimumSequence` may need Group Policy, the image or a script.
 :::
 
 ### The properties of the agent MSI
@@ -148,10 +148,15 @@ See [The defaults of verify and verify-publication](/reference/command-line/#the
 
 | Value | Type | What it does |
 |---|---|---|
-| `Libraries` | list of ID and location | The libraries that an `InstallPackage` Action can use. Each entry has the library ID and a folder or a share. The agent refuses a library that is not in the list. |
 | `LibraryMinimumSequence` | list of ID and number | The lowest publication sequence to accept for a library. Use it for an agent that starts with no memory, for example on a new image. |
 | `LibraryMaxAgeDays` | 1 to 3660 | The agent refuses a publication that is older than this number of days. |
 | `RefuseAutomaticPublications` | 0 or 1 | 1 refuses publications that the automatic publisher signed. The agent then uses the last publication that administrators signed. |
+
+The agent has no list of libraries.
+It gets the files of any library that a signed Order names from the gateway.
+The gateway delivers only the libraries in its own settings. See [Install a package on a device](/library/install-a-package/).
+
+An earlier `Libraries` value is not read. You can remove it.
 
 See [Libraries and packages](/library/libraries-and-packages/).
 

@@ -10,13 +10,13 @@ Read the logs on the computer where the product runs.
 
 | Product | Log | Event log (Event Viewer) |
 |---|---|---|
-| Gateway | `%ProgramData%\Greenhold\Gateway\logs\gateway.log` | Greenhold > Gateway |
-| Manager | The console and the event log | Greenhold > Manager |
-| Agent | `%ProgramData%\Greenhold\Agent\agent.log` | Greenhold > Agent |
-| Setup wizard | `%ProgramData%\Greenhold\Setup\setup.log` for a scripted run | Greenhold > Setup |
-| Library command line | Run logs in the library, in `logs\runs` | Greenhold > Library Refresh |
-| Automatic publisher | Results in the library, in `logs\automatic`. `journal.jsonl` in its home folder, `%ProgramData%\Greenhold\LibraryPublisher\<LibraryId>` | Greenhold > Library Publisher |
-| Greenhold Admin | - | Greenhold > Admin, on your own computer |
+| Gateway | `%ProgramData%\Greenhold\Gateway\logs\gateway.log` | Greenhold > Dispatch > Gateway |
+| Manager | The console and the event log | Greenhold > Platform > Manager |
+| Agent | `%ProgramData%\Greenhold\Agent\agent.log` | Greenhold > Dispatch > Agent |
+| Setup wizard | `%ProgramData%\Greenhold\Setup\setup.log` for a scripted run | Greenhold > Platform > Setup |
+| Library command line | Run logs in the library, in `logs\runs` | Greenhold > Library > Refresh |
+| Automatic publisher | Results in the library, in `logs\automatic`. `journal.jsonl` in its home folder, `%ProgramData%\Greenhold\LibraryPublisher\<LibraryId>` | Greenhold > Library > Publisher |
+| Greenhold Admin | - | Greenhold > Platform > Admin, on your own computer |
 | Library Installer | `logs\` and `results\` in its work folder, `%ProgramData%\Greenhold\LibraryInstaller` | - |
 | MSI installers | The file that you name with `/l*v` | - |
 
@@ -24,7 +24,7 @@ Read the logs on the computer where the product runs.
 
 Each product writes to its own event log.
 In Event Viewer, open **Applications and Services Logs > Greenhold**.
-Each product has a folder with one log, **Operational**.
+The logs are in folders: **Dispatch** (Agent, Gateway), **Library** (Refresh, Publisher) and **Platform** (Manager, Setup, Admin). Each part has one log, **Operational**. The channel names are `Greenhold-Dispatch-Agent/Operational`, `Greenhold-Dispatch-Gateway/Operational`, `Greenhold-Library-Refresh/Operational`, `Greenhold-Library-Publisher/Operational`, `Greenhold-Platform-Manager/Operational`, `Greenhold-Platform-Setup/Operational` and `Greenhold-Platform-Admin/Operational`.
 Greenhold writes nothing to the Application log.
 
 The installers register the logs. The uninstall removes them. The events already written stay until you clear the log.
@@ -43,21 +43,21 @@ The event IDs are the same in each log:
 | 4002 | Error | A security event at Error. |
 
 Each event has three values on the **Details** tab: `Message` (the text), `LogEventId` (the ID of the line in the product's log, for example 5003 for a sign-in without a role) and `Category`.
-To filter on one security event, use the log, the event ID and `LogEventId`. For example, in an XPath filter on `Greenhold-Manager/Operational`:
+To filter on one security event, use the log, the event ID and `LogEventId`. For example, in an XPath filter on `Greenhold-Platform-Manager/Operational`:
 
 ```
 *[System[EventID=4001] and EventData[Data[@Name='LogEventId']=5003]]
 ```
 
 Each log is 1 MB by default. Change the size in the log's Properties, with `wevtutil sl`, or with Group Policy.
-To forward the events, subscribe to the log by its name, for example `Greenhold-Gateway/Operational`.
+To forward the events, subscribe to the log by its name, for example `Greenhold-Dispatch-Gateway/Operational`.
 The output of a Run never goes to an event log.
 
 Windows writes the service errors 7000 and 7009 in the System log when a service does not start.
 
 ### Gateway
 
-The gateway writes to the console, to the log file and to its event log (Greenhold > Gateway).
+The gateway writes to the console, to the log file and to its event log (Greenhold > Dispatch > Gateway).
 
 - The file has one JSON object on each line. It has the fields `time` (UTC), `level`, `eventId`, `event`, `category`, `security` and `message`.
 - The file rotates at 10 MB. The gateway keeps 10 files. The files of the gateway need at most about 100 MB.
@@ -77,13 +77,13 @@ Keep `Gateway:Logging:RunOutput` off on a production server.
 
 ### Manager
 
-The Manager writes warnings, errors and all security events to its event log (Greenhold > Manager).
+The Manager writes warnings, errors and all security events to its event log (Greenhold > Platform > Manager).
 At start it says in its console where the events go.
 When the log is not registered, for example when you start the Manager from a folder and not from the installer, it shows a warning at start.
 ### Agent
 
 The agent log rotates at 5 MB and keeps three files.
-The agent writes its start, its stop, its warnings and its errors to its event log (Greenhold > Agent).
+The agent writes its start, its stop, its warnings and its errors to its event log (Greenhold > Dispatch > Agent).
 The folder is for administrators and SYSTEM only.
 The log shows the refusal code when the agent refuses an Order.
 

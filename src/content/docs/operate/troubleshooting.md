@@ -278,23 +278,36 @@ For production, sign with a hardware-backed key.
 ## A job waits for the library
 
 **Symptom.** A job that installs a package does not run on a device.
-In the Manager, the device's Run shows **Waiting for the library** and "Waiting: the device cannot reach the library at" the library's path.
-`%ProgramData%\Greenhold\Agent\agent.log` shows `LibraryUnreachableException` with the library path.
+In the Manager, the device's Run shows **Waiting for the library** and "Waiting: the device cannot get the library's files from the gateway now."
 
-**Cause.** The agent reads the library from the path in its `Libraries` policy, as SYSTEM.
-The device cannot open that path. Examples: the path is a folder on the server, not on the device.
-Or the device is not in the domain of the server, so it has no account for the share.
+**Cause.** The gateway delivers the library files to the agent. The device reads no library folder itself.
+The gateway cannot give the files now. Common reasons:
 
-**Fix.**
+- The gateway's settings do not name the library yet (section `Gateway:LibraryDelivery`).
+- The gateway has not read the library yet, for example just after it started.
+- The gateway cannot read the library folder, the share or the Azure Blob container.
+- The gateway has too many downloads at once, or its cache is full.
+- The device has no connection to the gateway, or no room on its disk for the file twice.
 
-| Device | Fix |
-|---|---|
-| In the same domain as the library | Share the library folder. Give the computer account of the device (`DOMAIN\NAME$`) or a group of devices read access. Set the `Libraries` value of the device to the UNC path. |
-| Not in the domain | Copy the library folder to the device. Set the `Libraries` value to that folder. The copy is safe: the agent checks each file against the signed publication. The agent does not read a library from Azure Blob yet. |
+**Fix.** Do these steps on the gateway computer. Do them on every gateway node.
 
-Then run `Restart-Service GreenholdAgent`. The agent takes the job again within 30 minutes.
-When the device can read the library, the Run starts and the waiting message goes away.
-A later version of Greenhold delivers the package files through the gateway, so a device does not need access to the library.
+1. Open `%ProgramData%\Greenhold\Gateway\appsettings.json`. In `Gateway:LibraryDelivery`, check that a `Libraries` entry has the `Id` of the library (`libraryId` in `library.json`) and its `Location`.
+   Setup writes this entry for a library that it makes. Add the entry yourself for a library on Azure Blob or on another server.
+2. Check that the gateway can read the `Location`. The gateway runs as `LocalSystem`.
+   A local folder needs no extra permission. For a share, give the computer account of the gateway computer read access.
+   For an Azure Blob container, give the gateway's identity the role *Storage Blob Data Reader* on that container only. See [Azure Blob libraries](/library/azure-blob/).
+3. Open the gateway's event log in Event Viewer: **Applications and Services Logs > Greenhold > Dispatch > Gateway**. Look for these events:
+   - 3702: the gateway cannot read a library. The text says why.
+   - 3703: a file is not what its publication names. Publish the library again.
+   - 3704: the cache is full. Make `CacheMaxGiB` larger.
+4. Restart the gateway after you change its settings: `Restart-Service GreenholdGateway`.
+
+The gateway reads each library again every `RefreshInterval` (5 minutes by default).
+The device asks again by itself: after 1 minute, then each time twice as long, up to 30 minutes.
+When the gateway can give the files, the Run starts and the waiting message goes away.
+You change nothing on the device. The agent checks each file against the signed publication.
+
+A Run that is refused, and does not wait, has another cause: the library is not in the gateway's settings, or its publication is not valid. See [Orders and Releases](/dispatch/orders-and-releases/#what-the-agent-checks) for the codes.
 
 ## A package install fails with 1303 or 1603
 

@@ -7,7 +7,8 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 Greenhold has three installers.
 Each is an MSI for 64-bit Windows, per machine.
-This page is for version 0.1.6.
+This page is for version 0.1.8.
+Each installer needs the .NET 10 runtimes first. See [Requirements](/get-started/requirements/#net). When a runtime is missing, the installer stops and a silent install ends with exit code 1603.
 
 | Installer | Installs | Services |
 |---|---|---|
@@ -127,7 +128,7 @@ Give both or neither.
 The agent refuses one without the other.
 
 - `POLICYINSTALLATIONROOT` is the **Policy value** that `greenhold-sign root-create` prints. It is also in `root.public.json`.
-- Format: `alg:base64` entries, separated by semicolons. Version 0.1.6 knows one algorithm, `ecdsa-p256-sha256`. For example: `ecdsa-p256-sha256:MFkwEwYHKoZIzj0CAQ...`.
+- Format: `alg:base64` entries, separated by semicolons. Version 0.1.8 knows one algorithm, `ecdsa-p256-sha256`. For example: `ecdsa-p256-sha256:MFkwEwYHKoZIzj0CAQ...`.
 - The agent refuses a bare base64 key without the algorithm.
 - `POLICYINSTALLATIONID` is `installationId` from `root.public.json`. It has at most 128 characters.
 
@@ -339,7 +340,7 @@ Use the command line for them.
 Agent, with the policy for a test computer:
 
 ```
-msiexec /i C:\path\Greenhold-Agent-0.1.6-x64.msi /qn /norestart LICENSEACCEPTED=1 POLICYENROLLMENTURL="https://gateway.example.com:8444" POLICYCHANNELURL="https://gateway.example.com:8443" POLICYCHANNELAUTHORITY="<base64 DER>" POLICYINSTALLATIONROOT="<policy value>" POLICYINSTALLATIONID="<installation id>" /l*v C:\Windows\Temp\greenhold-agent.log
+msiexec /i C:\path\Greenhold-Agent-0.1.8-x64.msi /qn /norestart LICENSEACCEPTED=1 POLICYENROLLMENTURL="https://gateway.example.com:8444" POLICYCHANNELURL="https://gateway.example.com:8443" POLICYCHANNELAUTHORITY="<base64 DER>" POLICYINSTALLATIONROOT="<policy value>" POLICYINSTALLATIONID="<installation id>" /l*v C:\Windows\Temp\greenhold-agent.log
 ```
 
 The last page of the setup wizard shows this command with the values of your server.
@@ -347,19 +348,19 @@ The last page of the setup wizard shows this command with the values of your ser
 Agent, when Group Policy or Intune delivers the policy:
 
 ```
-msiexec /i C:\path\Greenhold-Agent-0.1.6-x64.msi /qn /norestart LICENSEACCEPTED=1 /l*v C:\Windows\Temp\greenhold-agent.log
+msiexec /i C:\path\Greenhold-Agent-0.1.8-x64.msi /qn /norestart LICENSEACCEPTED=1 /l*v C:\Windows\Temp\greenhold-agent.log
 ```
 
 Server:
 
 ```
-msiexec /i C:\path\Greenhold-Server-0.1.6-x64.msi /qn /norestart LICENSEACCEPTED=1 /l*v C:\Windows\Temp\greenhold-server.log
+msiexec /i C:\path\Greenhold-Server-0.1.8-x64.msi /qn /norestart LICENSEACCEPTED=1 /l*v C:\Windows\Temp\greenhold-server.log
 ```
 
 Admin Tools:
 
 ```
-msiexec /i C:\path\Greenhold-AdminTools-0.1.6-x64.msi /qn /norestart LICENSEACCEPTED=1 /l*v C:\Windows\Temp\greenhold-admintools.log
+msiexec /i C:\path\Greenhold-AdminTools-0.1.8-x64.msi /qn /norestart LICENSEACCEPTED=1 /l*v C:\Windows\Temp\greenhold-admintools.log
 ```
 
 </TabItem>
@@ -373,7 +374,7 @@ msiexec /i C:\path\Greenhold-AdminTools-0.1.6-x64.msi /qn /norestart LICENSEACCE
 
    | Field | Value |
    |---|---|
-   | Install command | `msiexec /i "Greenhold-Agent-0.1.6-x64.msi" /qn /norestart LICENSEACCEPTED=1 /l*v "C:\Windows\Temp\greenhold-agent.log"` |
+   | Install command | `msiexec /i "Greenhold-Agent-0.1.8-x64.msi" /qn /norestart LICENSEACCEPTED=1 /l*v "C:\Windows\Temp\greenhold-agent.log"` |
    | Uninstall command | `msiexec /x {<product code>} /qn /norestart` |
    | Install behavior | System |
    | Device restart behavior | Determine behavior based on return codes |
@@ -393,7 +394,7 @@ Start the agent after the policy arrives, or add `STARTSERVICES=1` to the instal
 2. Set the installation program:
 
    ```
-   msiexec /i "Greenhold-Agent-0.1.6-x64.msi" /qn /norestart LICENSEACCEPTED=1 /l*v "C:\Windows\Temp\greenhold-agent.log"
+   msiexec /i "Greenhold-Agent-0.1.8-x64.msi" /qn /norestart LICENSEACCEPTED=1 /l*v "C:\Windows\Temp\greenhold-agent.log"
    ```
 
 3. Set the uninstall program: `msiexec /x {<product code>} /qn /norestart`. ConfigMgr fills in the product code from the MSI.
@@ -433,7 +434,7 @@ See [Upgrade Greenhold](/operate/upgrade-greenhold/) for the steps on the server
 ## Uninstall
 
 ```
-msiexec /x C:\path\Greenhold-Agent-0.1.6-x64.msi /qn /norestart /l*v C:\Windows\Temp\greenhold-agent-uninstall.log
+msiexec /x C:\path\Greenhold-Agent-0.1.8-x64.msi /qn /norestart /l*v C:\Windows\Temp\greenhold-agent-uninstall.log
 ```
 
 You can also use **Settings > Apps** or the product code.
@@ -462,11 +463,11 @@ To remove everything, see [Remove Greenhold](/operate/remove-greenhold/).
 
 The upgrade code is the same for every version.
 The product code changes with every build.
-The product version of a release is the version with `.0` added, for example `0.1.6.0`.
+The product version of a release is the version with `.0` added, for example `0.1.8.0`.
 
 ## Agent policy values that are not installer properties
 
-Version 0.1.6 has no installer property for these values.
+Version 0.1.8 has no installer property for these values.
 Set them with Group Policy, Intune or the registry, in `HKLM\SOFTWARE\Policies\Greenhold\Agent`.
 A later version adds installer properties for them.
 
@@ -477,8 +478,7 @@ A later version adds installer properties for them.
 | `SecondSignerRule` | DWORD | 0 or 1 | 1 | Second signer for broad Orders |
 | `AlwaysSecondSigner` | DWORD | 0 or 1 | 0 | Second signer for every Order |
 | `SecondSignerAbove` | DWORD | 1 to 100000 | 25 | Second signer above (devices) |
-| `Libraries` | Subkey `Libraries`: one text value for each library. The name is the library ID (a GUID). The data is a full local path or a share. | Path at most 1024 characters | None | Libraries InstallPackage may read |
-| `LibraryMinimumSequence` | Subkey `LibraryMinimumSequence`: one value for each library in `Libraries`. The name is the library ID. The data is a DWORD or text of digits. | 1 or more | None | Lowest publication sequence per library |
+| `LibraryMinimumSequence` | Subkey `LibraryMinimumSequence`: one value for each library. The name is the library ID (a GUID). The data is a DWORD or text of digits. | 1 or more | None | Lowest publication sequence per library |
 | `LibraryMaxAgeDays` | DWORD | 1 to 3660 | No limit | Oldest accepted publication (days) |
 | `RefuseAutomaticPublications` | DWORD | 0 or 1 | 0 | Refuse automatic library publications |
 | `FailedRunLogDays` | DWORD | 1 to 365 | 14 | Keep the logs of failed Runs (days) |
