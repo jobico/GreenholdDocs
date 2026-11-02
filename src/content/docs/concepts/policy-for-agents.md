@@ -66,11 +66,12 @@ Use this for a test computer.
 | `POLICYACCEPTEDKEYKINDS` | `AcceptedKeyKinds`, as a list with commas. It replaces the whole list. |
 | `POLICYALLOWTAGRELAXATION` | `AllowTagRelaxation`: `1` or `0` |
 
+The agent MSI has 16 `POLICY...` properties in all. See [Agent policy properties](/reference/agent-policy-properties/).
 The installer remembers the values that you give.
-It writes them again when you repair or upgrade the agent without properties.
+When you repair or upgrade the agent without properties, it keeps the value that is in the policy key at that moment. A value that Group Policy changed stays as Group Policy set it. A value that was removed is not put back.
 Group Policy that sets the same value overrides them at the next refresh.
 Never give an enrollment token as a property.
-For the formats, the defaults and what the installer remembers, see [Installer properties](/reference/installer-properties/).
+For the formats, the defaults and what the installer remembers, see [Agent policy properties](/reference/agent-policy-properties/) and [Installer properties](/reference/installer-properties/).
 
 ## The values
 

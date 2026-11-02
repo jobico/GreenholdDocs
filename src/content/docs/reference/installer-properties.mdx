@@ -42,22 +42,20 @@ Test them on a small group of computers first.
 
 ## Agent installer
 
-| Property | Values | Default | Remembered | Registry value |
-|---|---|---|---|---|
-| `STARTSERVICES` | `1` | Not set | No | None |
-| `POLICYENROLLMENTURL` | https address | Not set | Yes | `GatewayEnrollmentUrl` |
-| `POLICYCHANNELURL` | https address | Not set | Yes | `GatewayChannelUrl` |
-| `POLICYCHANNELAUTHORITY` | Base64 DER certificate | Not set | Yes | `ChannelAuthority` |
-| `POLICYINSTALLATIONROOT` | Root key set | Not set | Yes | `InstallationRootPublicKey` |
-| `POLICYINSTALLATIONID` | Text | Not set | Yes | `InstallationId` |
-| `POLICYACCEPTEDKEYKINDS` | List of key kinds | Not set | Yes | `AcceptedKeyKinds` |
-| `POLICYALLOWTAGRELAXATION` | `0` or `1` | Not set | Yes | `AllowTagRelaxation` |
+| Property | Values | Default | Remembered |
+|---|---|---|---|
+| `STARTSERVICES` | `1` or `0` | Not set | No |
+| 16 `POLICY...` properties | See [Agent policy properties](/reference/agent-policy-properties/) | Not set | Yes |
 
 ### STARTSERVICES
 
 `STARTSERVICES=1` starts the agent service at the end of the install.
-Without it, the installer does not start the agent, also not after an upgrade.
-The agent then stays stopped until you start it or until the computer starts again.
+`STARTSERVICES=0` leaves the agent stopped, also when it ran before an upgrade.
+
+When you do not give the property:
+
+- A first install starts nothing. The agent stays stopped until you start it or until the computer starts again.
+- An upgrade starts the agent when it ran before the upgrade. The agent records this itself. An agent of version 0.1.6 or older records nothing. The installer then starts it when it is enrolled.
 
 Use it only when the agent has its policy.
 An agent without policy does not start.
@@ -71,7 +69,9 @@ Get-Service GreenholdAgent
 
 ### The POLICY properties
 
-The seven `POLICY...` properties write policy values for the agent.
+The 16 `POLICY...` properties write policy values for the agent.
+[Agent policy properties](/reference/agent-policy-properties/) lists all of them, with their defaults and the rules for upgrade and uninstall.
+This section gives the details of the seven values for the gateway, the trust and the key kinds.
 They are for a test computer or a small site.
 For many computers, set the policy with Group Policy or Intune.
 See [Policy for agents](/concepts/policy-for-agents/).
@@ -186,26 +186,16 @@ The installer keeps a copy of each `POLICY...` value that it writes, in its own 
 HKLM\SOFTWARE\Greenhold\Installer\Agent
 ```
 
-| Property | Remembered as |
-|---|---|
-| `POLICYENROLLMENTURL` | `PolicyEnrollmentUrl` |
-| `POLICYCHANNELURL` | `PolicyChannelUrl` |
-| `POLICYCHANNELAUTHORITY` | `PolicyChannelAuthority` |
-| `POLICYINSTALLATIONROOT` | `PolicyInstallationRoot` |
-| `POLICYINSTALLATIONID` | `PolicyInstallationId` |
-| `POLICYACCEPTEDKEYKINDS` | `PolicyAcceptedKeyKinds` |
-| `POLICYALLOWTAGRELAXATION` | `PolicyAllowTagRelaxation` |
-
 These rules apply:
 
-- An upgrade or a repair without a property uses the remembered value. It writes the policy value again.
-- A property that you give replaces that one value. The installer keeps the other remembered values.
-- A repair puts back the remembered value over a change that you made by hand in the policy key.
-- An empty property, for example `POLICYALLOWTAGRELAXATION=""`, counts as not given. The installer then uses the remembered value. You cannot remove a value with an empty property.
-- The uninstall removes the policy values that the installer wrote, and the remembered values.
+- An upgrade or a repair without a property keeps the value that is in the policy key now. When nobody changed the value, this is the remembered value.
+- When Group Policy changed the value, the installer keeps the value of Group Policy. It does not write the remembered value over it.
+- A value that is gone is not put back. This includes a value that Group Policy removed and a value that you deleted by hand. The installer forgets it. To write it again, give its property again.
+- A property that you give replaces that one value. The installer keeps the other values.
+- An empty property, for example `POLICYALLOWTAGRELAXATION=""`, counts as not given. You cannot remove a value with an empty property.
+- The uninstall removes the policy values that the installer wrote or kept, and the remembered values. This is also true when Group Policy changed them since.
 
-To remove one remembered value, delete it in both keys.
-Or uninstall the agent and install it again with the properties that you want.
+The names of the remembered values and the full rules are on [Agent policy properties](/reference/agent-policy-properties/#upgrade-and-repair).
 
 ### Group Policy and Intune win
 
@@ -214,7 +204,7 @@ When they apply their policy, their value replaces the value of the installer.
 
 Use one source for each value.
 Do not give a `POLICY...` property for a value that Group Policy or Intune also sets.
-A repair or an uninstall of the agent changes or removes the values that the installer wrote, also when Group Policy set them later.
+An uninstall of the agent removes the values that the installer wrote, also when Group Policy set them later.
 Group Policy writes its values again when it next applies them.
 
 ## Server installer
@@ -422,10 +412,10 @@ Install the new MSI over the old one.
 Do not uninstall first.
 
 - The installer stops the services, removes the old version and installs the new one.
-- It starts no service, unless you give `STARTSERVICES=1`.
+- It starts no service, unless you give `STARTSERVICES=1`. The exception is the agent: when the agent ran before the upgrade, the installer starts it again.
 - The agent keeps its key, identity and policy. It does not enroll again.
-- The agent installer reads the remembered `POLICY...` values. See [How the installer remembers the POLICY values](#how-the-installer-remembers-the-policy-values).
-- `LICENSEACCEPTED`, `STARTSERVICES` and `STARTSETUP` are not remembered. Give them again for each install.
+- The agent installer keeps the policy values that are there. See [How the installer remembers the POLICY values](#how-the-installer-remembers-the-policy-values).
+- `LICENSEACCEPTED` and `STARTSETUP` are not remembered. Give them again for each install. For `STARTSERVICES`, see above.
 - You cannot install an older version over a newer one. The installer stops with exit code 1603.
 - Windows Installer ignores the fourth part of the version. Two builds with the same first three parts replace each other.
 
@@ -445,7 +435,7 @@ What stays:
 
 | Installer | What stays |
 |---|---|
-| Agent | The key, the identity and the log of the agent in `%ProgramData%\Greenhold\Agent`. The policy values that the installer did not write. |
+| Agent | The key, the identity and the log of the agent in `%ProgramData%\Greenhold\Agent`. The policy values that the installer did not write or keep. |
 | Server | The gateway authority and its keys, the listener certificate, the data folder, the logs, the key ring of the Manager, the settings files in `%ProgramData%\Greenhold`, the library folders and the database. |
 | Admin Tools | The root, the keys, the certificates and the requests of the administrator. They are the files of the person. |
 
@@ -465,25 +455,9 @@ The upgrade code is the same for every version.
 The product code changes with every build.
 The product version of a release is the version with `.0` added, for example `0.1.8.0`.
 
-## Agent policy values that are not installer properties
+## Agent policy value without a property
 
-Version 0.1.8 has no installer property for these values.
-Set them with Group Policy, Intune or the registry, in `HKLM\SOFTWARE\Policies\Greenhold\Agent`.
-A later version adds installer properties for them.
-
-| Value | Type | Range | Default | Group Policy name |
-|---|---|---|---|---|
-| `Tags` | Multi-string, or text with commas | Each tag at most 128 characters, no control characters | None | Tags of this endpoint |
-| `RunTimeoutMinutes` | DWORD | 1 to 1440 | 60 | Run time limit (minutes) |
-| `SecondSignerRule` | DWORD | 0 or 1 | 1 | Second signer for broad Orders |
-| `AlwaysSecondSigner` | DWORD | 0 or 1 | 0 | Second signer for every Order |
-| `SecondSignerAbove` | DWORD | 1 to 100000 | 25 | Second signer above (devices) |
-| `LibraryMinimumSequence` | Subkey `LibraryMinimumSequence`: one value for each library. The name is the library ID (a GUID). The data is a DWORD or text of digits. | 1 or more | None | Lowest publication sequence per library |
-| `LibraryMaxAgeDays` | DWORD | 1 to 3660 | No limit | Oldest accepted publication (days) |
-| `RefuseAutomaticPublications` | DWORD | 0 or 1 | 0 | Refuse automatic library publications |
-| `FailedRunLogDays` | DWORD | 1 to 365 | 14 | Keep the logs of failed Runs (days) |
-| `FailedRunLogCount` | DWORD | 1 to 1000 | 20 | Keep the logs of failed Runs (number) |
-
-A value outside its range stops the agent at start.
-`Greenhold.Agent.exe status` names the value.
-For what each value does, see [Policy for agents](/concepts/policy-for-agents/#the-values).
+`LibraryMinimumSequence` is the one agent policy value that has no installer property.
+It is one value for each library, and Group Policy writes it as a list.
+Set it with Group Policy, Intune or the registry, in `HKLM\SOFTWARE\Policies\Greenhold\Agent`.
+For what it does, see [Policy for agents](/concepts/policy-for-agents/#the-values).

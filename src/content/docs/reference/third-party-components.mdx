@@ -1,0 +1,54 @@
+---
+title: Third-party components
+description: The third-party components that Greenhold ships, with version, license, project address and the parts that use each one. The license texts follow the list.
+---
+
+import data from '../../../data/third-party-components.json';
+
+export const usersOf = (id) => [...new Set(data.components.filter((c) => c.texts.includes(id)).map((c) => c.name))];
+
+Greenhold uses third-party components.
+This page lists each component once, with its version, its license, the address of its project and the Greenhold parts that use it.
+The Manager shows the same list on its **Third-party components** page.
+
+The list has {data.components.length} components.
+The parts are: {data.parts.join(', ')}.
+A component that two parts use in different versions has one row for each version.
+
+The packages that build this documentation site are on the [Third-party notices](/third-party-notices/) page.
+
+## Components
+
+<div class="third-party-table">
+<table>
+  <thead>
+    <tr><th>Component</th><th>Version</th><th>License</th><th>Used by</th><th>Project</th></tr>
+  </thead>
+  <tbody>
+    {data.components.map((c) => (
+      <tr>
+        <td>{c.name}</td>
+        <td>{c.version}</td>
+        <td>{c.license}</td>
+        <td>{c.usedBy.join(', ')}</td>
+        <td>{c.projectUrl ? <a href={c.projectUrl} rel="noopener noreferrer">{c.projectUrl.replace(/^https?:\/\//, '')}</a> : ''}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+</div>
+
+## Copyright notices
+
+{data.components.filter((c) => c.copyright).map((c) => (
+  <p><strong>{c.name} {c.version}</strong>: {c.copyright}</p>
+))}
+
+## License texts
+
+{Object.entries(data.texts).map(([id, t]) => (
+  <details>
+    <summary>{t.title}: {usersOf(id).join(", ")}</summary>
+    <pre>{t.content}</pre>
+  </details>
+))}

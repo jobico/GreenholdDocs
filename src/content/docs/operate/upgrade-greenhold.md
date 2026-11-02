@@ -115,7 +115,7 @@ If you do not have it, use the wizard.
    msiexec /i C:\path\Greenhold-Agent-<version>-x64.msi /qn /norestart LICENSEACCEPTED=1 STARTSERVICES=1 /l*v C:\Windows\Temp\greenhold-agent-upgrade.log
    ```
 
-   The installer starts the agent only with `STARTSERVICES=1`. Without it, the agent stays stopped. Then start it yourself:
+   An upgrade starts the agent again when it ran before the upgrade. `STARTSERVICES=1` starts it in all cases, and `STARTSERVICES=0` leaves it stopped. An agent of version 0.1.6 or older records nothing. The installer then starts it only when it is enrolled. When the agent is stopped, start it yourself:
 
    ```powershell
    Start-Service GreenholdAgent
@@ -128,7 +128,7 @@ If you do not have it, use the wizard.
    ```powershell
    New-ItemProperty -Path HKLM:\SOFTWARE\Policies\Greenhold\Agent -Name AcceptedKeyKinds -PropertyType MultiString -Value software,tpm,passkey,security-key,vault -Force
    ```
-3. If you gave the `POLICY...` properties at the first install, the installer remembers them. An upgrade without properties keeps them. A property that you give replaces that one value and keeps the others. Group Policy overrides them at its next refresh. See [Installer properties](/reference/installer-properties/#how-the-installer-remembers-the-policy-values).
+3. If you gave the `POLICY...` properties at the first install, the installer remembers them. An upgrade without properties keeps the value that is in the policy key at that moment. When Group Policy changed a value, the installer keeps the value of Group Policy. It does not put back a value that was removed, also not a value that you deleted by hand. A property that you give replaces that one value and keeps the others. Group Policy overrides the values at its next refresh. The uninstall removes the values; Group Policy writes them again at its next refresh. See [Agent policy properties](/reference/agent-policy-properties/#upgrade-and-repair).
 4. An agent without `AcceptedKeyKinds` uses the strict defaults after the upgrade. It refuses an Order that is signed with a software key. For a lab, add `POLICYACCEPTEDKEYKINDS="software,tpm,passkey,security-key,vault"` to the command, or set the policy. The value replaces the whole list. Give every kind that you accept. With `software` alone, the agent refuses an Order that a TPM key signed. See [Strict defaults](/concepts/policy-for-agents/#strict-defaults).
 
 To upgrade many computers, use your software distribution tool with the same command.
